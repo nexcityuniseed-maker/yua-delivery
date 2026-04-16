@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>配送先マスタ管理 - 日本ユーア東海</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", sans-serif;
+    background: #f2f4f7;
+    color: #1a1d23;
+    padding-bottom: 80px;
+  }
+
+  /* ヘッダー */
+  .header {
+    background: white;
+    padding: 14px 16px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .header-back {
+    background: none;
+    border: none;
+    font-size: 22px;
+    cursor: pointer;
+    color: #1a73e8;
+  }
+  .header-title {
+    font-size: 17px;
+    font-weight: 700;
+    flex: 1;
+  }
+  .header-count {
+    font-size: 13px;
+    color: #5f6368;
+  }
+
+  /* 検索バー */
+  .search-bar {
+    padding: 12px 16px;
+    background: white;
+    border-bottom: 1px solid #e8eaed;
+    position: sticky;
+    top: 56px;
+    z-index: 99;
+  }
+  .search-input {
+    width: 100%;
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: 1px solid #dadce0;
+    font-size: 14px;
+    font-family: inherit;
+    background: #f8f9fa;
+  }
+  .search-input:focus {
+    outline: none;
+    border-color: #1a73e8;
+    background: white;
+  }
+
+  /* Sheets連携バー */
+  .sync-bar {
+    background: #e8f5e9;
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+  }
+  .sync-icon { font-size: 18px; }
+  .sync-text { flex: 1; color: #1b5e20; }
+  .sync-text strong { font-weight: 700; }
+  .sync-btn {
+    background: white;
+    border: 1px solid #34a853;
+    color: #1b5e20;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+  }
+
+  /* フィルタタブ */
+  .filter-tabs {
+    background: white;
+    padding: 10px 16px;
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    border-bottom: 1px solid #e8eaed;
+    scrollbar-width: none;
+  }
+  .filter-tabs::-webkit-scrollbar { display: none; }
+  .filter-tab {
+    background: #f1f3f4;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 16px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #5f6368;
+    cursor: pointer;
+    font-family: inherit;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .filter-tab.active {
+    background: #1a73e8;
+    color: white;
+  }
+
+  /* 店舗リスト */
+  .shop-list {
+    padding: 12px;
+  }
+  .shop-card {
+    background: white;
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 8px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    cursor: pointer;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .shop-card:active { background: #f8f9fa; }
+  .shop-icon {
+    font-size: 24px;
+    width: 40px;
+    height: 40px;
+    background: #e8f0fe;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .shop-info { flex: 1; min-width: 0; }
+  .shop-name {
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 3px;
+  }
+  .shop-address {
+    font-size: 12px;
+    color: #5f6368;
+    margin-bottom: 6px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .shop-tags {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .shop-tag {
+    background: #fff3cd;
+    color: #7c5e00;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .shop-tag.area {
+    background: #e3f2fd;
+    color: #0d47a1;
+  }
+  .shop-tag.freq {
+    background: #f3e5f5;
+    color: #4a148c;
+  }
+  .shop-arrow {
+    color: #bdc1c6;
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+
+  /* 追加ボタン（FAB） */
+  .fab {
+    position: fixed;
+    bottom: 96px;
+    right: 16px;
+    width: 56px;
+    height: 56px;
+    border-radius: 28px;
+    background: #1a73e8;
+    color: white;
+    border: none;
+    font-size: 28px;
+    box-shadow: 0 4px 16px rgba(26,115,232,0.4);
+    cursor: pointer;
+    z-index: 50;
+  }
+  .fab:active { transform: scale(0.95); }
+
+  /* モーダル */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 200;
+    display: none;
+    align-items: flex-end;
+    justify-content: center;
+  }
+  .modal-overlay.show { display: flex; }
+  .modal {
+    background: white;
+    width: 100%;
+    max-width: 500px;
+    max-height: 92vh;
+    border-radius: 20px 20px 0 0;
+    overflow-y: auto;
+    animation: slideUp 0.25s ease;
+  }
+  @keyframes slideUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+  }
+  .modal-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid #e8eaed;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    background: white;
+    z-index: 10;
+  }
+  .modal-title {
+    font-size: 17px;
+    font-weight: 700;
+  }
+  .modal-close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #5f6368;
+    padding: 4px 8px;
+  }
+
+  .form-section {
+    padding: 16px 20px;
+  }
+  .form-section + .form-section {
+    border-top: 8px solid #f2f4f7;
+  }
+  .form-group {
+    margin-bottom: 14px;
+  }
+  .form-group:last-child { margin-bottom: 0; }
+  .form-label {
+    font-size: 12px;
+    font-weight: 700;
+    color: #5f6368;
+    margin-bottom: 6px;
+    display: block;
+    letter-spacing: 0.05em;
+  }
+  .form-label .required {
+    color: #d93025;
+    margin-left: 4px;
+  }
+  .form-input, .form-textarea, .form-select {
+    width: 100%;
+    padding: 11px 14px;
+    border: 1px solid #dadce0;
+    border-radius: 8px;
+    font-size: 15px;
+    font-family: inherit;
+    background: white;
+  }
+  .form-input:focus, .form-textarea:focus, .form-select:focus {
+    outline: none;
+    border-color: #1a73e8;
+  }
+  .form-textarea {
+    resize: vertical;
+    min-height: 70px;
+  }
+  .form-hint {
+    font-size: 11px;
+    color: #5f6368;
+    margin-top: 4px;
+  }
+
+  /* 納品場所セレクタ */
+  .place-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .place-option {
+    border: 2px solid #e8eaed;
+    border-radius: 10px;
+    padding: 12px 10px;
+    text-align: center;
+    cursor: pointer;
+    background: white;
+  }
+  .place-option.selected {
+    border-color: #1a73e8;
+    background: #e8f0fe;
+  }
+  .place-option-icon {
+    font-size: 24px;
+    margin-bottom: 4px;
+  }
+  .place-option-label {
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.3;
+  }
+
+  /* 配送頻度チェック */
+  .weekday-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 6px;
+  }
+  .weekday-btn {
+    aspect-ratio: 1;
+    border: 2px solid #e8eaed;
+    background: white;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    color: #5f6368;
+    font-family: inherit;
+  }
+  .weekday-btn.selected {
+    border-color: #1a73e8;
+    background: #1a73e8;
+    color: white;
+  }
+
+  /* フッターボタン */
+  .modal-footer {
+    position: sticky;
+    bottom: 0;
+    background: white;
+    padding: 14px 20px;
+    border-top: 1px solid #e8eaed;
+    display: flex;
+    gap: 10px;
+  }
+  .btn {
+    flex: 1;
+    padding: 13px;
+    border-radius: 10px;
+    border: none;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .btn-cancel {
+    background: #f1f3f4;
+    color: #1a1d23;
+  }
+  .btn-save {
+    background: #1a73e8;
+    color: white;
+  }
+  .btn-delete {
+    background: white;
+    color: #d93025;
+    border: 1px solid #d93025;
+    padding: 12px;
+    margin: 0 20px 14px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    width: calc(100% - 40px);
+  }
+
+  /* 詳細表示モード */
+  .detail-row {
+    padding: 12px 0;
+    border-bottom: 1px solid #f1f3f4;
+    display: flex;
+    gap: 12px;
+  }
+  .detail-row:last-child { border-bottom: none; }
+  .detail-icon {
+    font-size: 18px;
+    color: #5f6368;
+    width: 24px;
+    flex-shrink: 0;
+  }
+  .detail-content { flex: 1; }
+  .detail-label {
+    font-size: 11px;
+    color: #5f6368;
+    font-weight: 600;
+    margin-bottom: 2px;
+  }
+  .detail-value {
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  /* フッター */
+  .footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: white;
+    padding: 14px 16px;
+    box-shadow: 0 -2px 12px rgba(0,0,0,0.08);
+    display: flex;
+    justify-content: space-around;
+    z-index: 100;
+  }
+  .footer-btn {
+    background: none;
+    border: none;
+    color: #5f6368;
+    font-size: 11px;
+    font-family: inherit;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+  }
+  .footer-btn.active { color: #1a73e8; }
+  .footer-icon { font-size: 22px; }
+
+  /* トースト */
+  .toast {
+    position: fixed;
+    bottom: 110px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #34a853;
+    color: white;
+    padding: 12px 24px;
+    border-radius: 24px;
+    font-weight: 600;
+    font-size: 14px;
+    box-shadow: 0 4px 16px rgba(52,168,83,0.4);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s, transform 0.3s;
+    white-space: nowrap;
+    z-index: 300;
+  }
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(-10px);
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <a href="index.html" class="header-back" style="text-decoration:none;display:inline-block;">←</a>
+  <div class="header-title">配送先マスタ</div>
+  <div class="header-count" id="headerCount">12件</div>
+</div>
+
+<div class="search-bar">
+  <input type="text" class="search-input" id="searchInput" placeholder="🔍 店舗名・住所で検索">
+</div>
+
+<div class="sync-bar">
+  <span class="sync-icon">📊</span>
+  <span class="sync-text"><strong>Google Sheets</strong> と同期中 · 最終同期 2分前</span>
+  <button class="sync-btn" onclick="syncNow()">更新</button>
+</div>
+
+<div class="filter-tabs">
+  <button class="filter-tab active" data-filter="all">すべて</button>
+  <button class="filter-tab" data-filter="名古屋">名古屋市</button>
+  <button class="filter-tab" data-filter="豊田">豊田市</button>
+  <button class="filter-tab" data-filter="岡崎">岡崎市</button>
+  <button class="filter-tab" data-filter="その他">その他</button>
+</div>
+
+<div class="shop-list" id="shopList"></div>
+
+<button class="fab" onclick="openAddModal()" title="配送先を追加">＋</button>
+
+<div class="footer">
+  <button class="footer-btn">
+    <span class="footer-icon">📋</span><span>ルート</span>
+  </button>
+  <button class="footer-btn">
+    <span class="footer-icon">🗺</span><span>地図</span>
+  </button>
+  <button class="footer-btn active">
+    <span class="footer-icon">🏪</span><span>店舗管理</span>
+  </button>
+  <button class="footer-btn">
+    <span class="footer-icon">📊</span><span>実績</span>
+  </button>
+</div>
+
+<!-- 追加/編集モーダル -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <div class="modal-header">
+      <button class="modal-close" onclick="closeModal()">✕</button>
+      <div class="modal-title" id="modalTitle">配送先を追加</div>
+      <div style="width:32px"></div>
+    </div>
+
+    <div class="form-section">
+      <div class="form-group">
+        <label class="form-label">店舗名<span class="required">*</span></label>
+        <input type="text" class="form-input" id="f_name" placeholder="例：居酒屋まるきん 栄店">
+      </div>
+      <div class="form-group">
+        <label class="form-label">住所<span class="required">*</span></label>
+        <input type="text" class="form-input" id="f_address" placeholder="例：名古屋市中区栄3-15-8">
+      </div>
+      <div class="form-group">
+        <label class="form-label">電話番号</label>
+        <input type="tel" class="form-input" id="f_tel" placeholder="052-XXX-XXXX">
+      </div>
+      <div class="form-group">
+        <label class="form-label">担当者名</label>
+        <input type="text" class="form-input" id="f_contact" placeholder="例：田中店長">
+      </div>
+    </div>
+
+    <div class="form-section">
+      <div class="form-group">
+        <label class="form-label">納品場所<span class="required">*</span></label>
+        <div class="place-grid" id="placeGrid">
+          <div class="place-option" data-place="entrance">
+            <div class="place-option-icon">🚪</div>
+            <div class="place-option-label">店舗入口</div>
+          </div>
+          <div class="place-option" data-place="back">
+            <div class="place-option-icon">🚛</div>
+            <div class="place-option-label">裏口・搬入口</div>
+          </div>
+          <div class="place-option" data-place="staff">
+            <div class="place-option-icon">🙋</div>
+            <div class="place-option-label">スタッフに手渡し</div>
+          </div>
+          <div class="place-option" data-place="kitchen">
+            <div class="place-option-icon">👨‍🍳</div>
+            <div class="place-option-label">キッチンまで搬入</div>
+          </div>
+          <div class="place-option" data-place="storage">
+            <div class="place-option-icon">📦</div>
+            <div class="place-option-label">指定の倉庫</div>
+          </div>
+          <div class="place-option" data-place="counter">
+            <div class="place-option-icon">🧾</div>
+            <div class="place-option-label">レジカウンター</div>
+          </div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">納品時の注意メモ</label>
+        <textarea class="form-textarea" id="f_note" placeholder="例：裏のシャッターが開いてます／重いので台車で／インターホン鳴らしてから"></textarea>
+        <div class="form-hint">ドライバーがナビ画面で確認できます</div>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <div class="form-group">
+        <label class="form-label">配送曜日</label>
+        <div class="weekday-grid" id="weekdayGrid">
+          <button class="weekday-btn" data-day="1">月</button>
+          <button class="weekday-btn" data-day="2">火</button>
+          <button class="weekday-btn" data-day="3">水</button>
+          <button class="weekday-btn" data-day="4">木</button>
+          <button class="weekday-btn" data-day="5">金</button>
+          <button class="weekday-btn" data-day="6">土</button>
+          <button class="weekday-btn" data-day="0">日</button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">希望時間帯</label>
+        <input type="text" class="form-input" id="f_time" placeholder="例：11:00〜13:00（ランチ前まで）">
+      </div>
+      <div class="form-group">
+        <label class="form-label">定番商品</label>
+        <textarea class="form-textarea" id="f_items" placeholder="例：お米20kg、醤油、割り箸"></textarea>
+      </div>
+    </div>
+
+    <button class="btn-delete" id="deleteBtn" onclick="deleteShop()" style="display:none">この配送先を削除</button>
+
+    <div class="modal-footer">
+      <button class="btn btn-cancel" onclick="closeModal()">キャンセル</button>
+      <button class="btn btn-save" onclick="saveShop()">保存</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const PLACES = {
+  entrance: { icon: "🚪", label: "店舗入口" },
+  back:     { icon: "🚛", label: "裏口・搬入口" },
+  staff:    { icon: "🙋", label: "スタッフに手渡し" },
+  kitchen:  { icon: "👨‍🍳", label: "キッチン搬入" },
+  storage:  { icon: "📦", label: "指定倉庫" },
+  counter:  { icon: "🧾", label: "レジカウンター" },
+};
+
+let shops = [
+  { id: 1, name: "焼肉大将軍 名駅店", address: "名古屋市中村区名駅4-5-2", tel: "052-111-1111", contact: "山田店長", place: "back", note: "裏のシャッター開いてます", days: [1,2,3,4,5], time: "10:00〜11:00", items: "割り箸、おしぼり" },
+  { id: 2, name: "ラーメン一番星", address: "名古屋市中村区椿町1-3", tel: "052-222-2222", contact: "佐藤オーナー", place: "kitchen", note: "冷蔵庫横まで運んでください", days: [1,3,5], time: "9:00〜10:30", items: "麺、スープ原液" },
+  { id: 3, name: "カフェ ベル", address: "名古屋市中区錦2-10-5", tel: "052-333-3333", contact: "", place: "counter", note: "", days: [2,4,6], time: "9:00〜11:00", items: "コーヒー豆、紙コップ" },
+  { id: 4, name: "居酒屋まるきん 栄店", address: "名古屋市中区栄3-15-8 サンプルビル1F", tel: "052-444-4444", contact: "鈴木店長", place: "staff", note: "開店前なのでインターホン", days: [1,2,3,4,5,6], time: "11:00〜13:00", items: "お米20kg、油" },
+  { id: 5, name: "寿司処 江戸", address: "名古屋市中区大須2-8-1", tel: "052-555-5555", contact: "", place: "entrance", note: "", days: [2,5], time: "10:00〜12:00", items: "割り箸、醤油" },
+  { id: 6, name: "焼き鳥 鳥政", address: "名古屋市中区新栄1-5-3", tel: "052-666-6666", contact: "高橋店長", place: "back", note: "重いので台車で", days: [1,4], time: "13:00〜15:00", items: "備長炭、タレ" },
+  { id: 7, name: "中華料理 龍門", address: "名古屋市東区東桜1-12-4", tel: "052-777-7777", contact: "", place: "kitchen", note: "", days: [1,2,3,4,5], time: "13:00〜15:00", items: "油、調味料一式" },
+  { id: 8, name: "和食 さくら", address: "名古屋市東区葵3-2-1", tel: "052-888-8888", contact: "伊藤女将", place: "storage", note: "2階の倉庫へ", days: [1,3,5], time: "14:00〜16:00", items: "お米30kg、味噌" },
+  { id: 9, name: "とんかつ たなか 豊田店", address: "豊田市若宮町1-52", tel: "0565-11-1111", contact: "田中社長", place: "staff", note: "", days: [2,4,6], time: "14:00〜16:00", items: "パン粉、キャベツ" },
+  { id: 10, name: "居酒屋 ほろ酔い 岡崎店", address: "岡崎市康生通南2-25", tel: "0564-22-2222", contact: "", place: "entrance", note: "", days: [1,2,3,4,5,6], time: "16:00〜18:00", items: "お米、割り箸、油" },
+];
+
+let currentFilter = "all";
+let currentSearch = "";
+let editingId = null;
+let selectedPlace = null;
+let selectedDays = [];
+
+function render() {
+  const filtered = shops.filter(s => {
+    if (currentFilter === "all") return matchSearch(s);
+    if (currentFilter === "その他") return !["名古屋","豊田","岡崎"].some(a => s.address.includes(a)) && matchSearch(s);
+    return s.address.includes(currentFilter) && matchSearch(s);
+  });
+
+  document.getElementById("headerCount").textContent = `${filtered.length}件`;
+
+  const listEl = document.getElementById("shopList");
+  if (filtered.length === 0) {
+    listEl.innerHTML = `<div style="text-align:center;padding:40px 20px;color:#5f6368;">該当する配送先がありません</div>`;
+    return;
+  }
+  listEl.innerHTML = filtered.map(s => {
+    const place = PLACES[s.place] || PLACES.entrance;
+    const dayLabels = ["日","月","火","水","木","金","土"];
+    const daysText = s.days.length === 7 ? "毎日" : s.days.length === 0 ? "-" : s.days.sort().map(d => dayLabels[d]).join("・");
+    return `
+      <div class="shop-card" onclick="openEditModal(${s.id})">
+        <div class="shop-icon">${place.icon}</div>
+        <div class="shop-info">
+          <div class="shop-name">${s.name}</div>
+          <div class="shop-address">📍 ${s.address}</div>
+          <div class="shop-tags">
+            <span class="shop-tag">${place.label}</span>
+            <span class="shop-tag freq">${daysText}</span>
+            ${s.time ? `<span class="shop-tag area">${s.time}</span>` : ''}
+          </div>
+        </div>
+        <div class="shop-arrow">›</div>
+      </div>
+    `;
+  }).join("");
+}
+
+function matchSearch(s) {
+  if (!currentSearch) return true;
+  const q = currentSearch.toLowerCase();
+  return s.name.toLowerCase().includes(q) || s.address.toLowerCase().includes(q);
+}
+
+// フィルタ
+document.querySelectorAll(".filter-tab").forEach(tab => {
+  tab.addEventListener("click", () => {
+    document.querySelectorAll(".filter-tab").forEach(t => t.classList.remove("active"));
+    tab.classList.add("active");
+    currentFilter = tab.dataset.filter;
+    render();
+  });
+});
+
+// 検索
+document.getElementById("searchInput").addEventListener("input", e => {
+  currentSearch = e.target.value;
+  render();
+});
+
+// モーダル：追加
+function openAddModal() {
+  editingId = null;
+  document.getElementById("modalTitle").textContent = "配送先を追加";
+  document.getElementById("deleteBtn").style.display = "none";
+  clearForm();
+  document.getElementById("modal").classList.add("show");
+}
+
+// モーダル：編集
+function openEditModal(id) {
+  const s = shops.find(x => x.id === id);
+  if (!s) return;
+  editingId = id;
+  document.getElementById("modalTitle").textContent = "配送先を編集";
+  document.getElementById("deleteBtn").style.display = "block";
+  document.getElementById("f_name").value = s.name;
+  document.getElementById("f_address").value = s.address;
+  document.getElementById("f_tel").value = s.tel || "";
+  document.getElementById("f_contact").value = s.contact || "";
+  document.getElementById("f_note").value = s.note || "";
+  document.getElementById("f_time").value = s.time || "";
+  document.getElementById("f_items").value = s.items || "";
+  selectedPlace = s.place;
+  selectedDays = [...(s.days || [])];
+  updateFormVisuals();
+  document.getElementById("modal").classList.add("show");
+}
+
+function clearForm() {
+  ["f_name","f_address","f_tel","f_contact","f_note","f_time","f_items"].forEach(id => {
+    document.getElementById(id).value = "";
+  });
+  selectedPlace = null;
+  selectedDays = [];
+  updateFormVisuals();
+}
+
+function updateFormVisuals() {
+  document.querySelectorAll(".place-option").forEach(el => {
+    el.classList.toggle("selected", el.dataset.place === selectedPlace);
+  });
+  document.querySelectorAll(".weekday-btn").forEach(el => {
+    el.classList.toggle("selected", selectedDays.includes(parseInt(el.dataset.day)));
+  });
+}
+
+// 納品場所セレクタ
+document.querySelectorAll(".place-option").forEach(el => {
+  el.addEventListener("click", () => {
+    selectedPlace = el.dataset.place;
+    updateFormVisuals();
+  });
+});
+
+// 曜日セレクタ
+document.querySelectorAll(".weekday-btn").forEach(el => {
+  el.addEventListener("click", () => {
+    const d = parseInt(el.dataset.day);
+    if (selectedDays.includes(d)) {
+      selectedDays = selectedDays.filter(x => x !== d);
+    } else {
+      selectedDays.push(d);
+    }
+    updateFormVisuals();
+  });
+});
+
+function closeModal() {
+  document.getElementById("modal").classList.remove("show");
+}
+
+function saveShop() {
+  const name = document.getElementById("f_name").value.trim();
+  const address = document.getElementById("f_address").value.trim();
+  if (!name || !address) {
+    alert("店舗名と住所は必須です");
+    return;
+  }
+  if (!selectedPlace) {
+    alert("納品場所を選択してください");
+    return;
+  }
+  const data = {
+    name, address,
+    tel: document.getElementById("f_tel").value.trim(),
+    contact: document.getElementById("f_contact").value.trim(),
+    place: selectedPlace,
+    note: document.getElementById("f_note").value.trim(),
+    days: [...selectedDays],
+    time: document.getElementById("f_time").value.trim(),
+    items: document.getElementById("f_items").value.trim(),
+  };
+
+  if (editingId === null) {
+    data.id = Math.max(0, ...shops.map(s => s.id)) + 1;
+    shops.unshift(data);
+    showToast(`「${name}」を追加しました ✓`);
+  } else {
+    const idx = shops.findIndex(s => s.id === editingId);
+    shops[idx] = { ...shops[idx], ...data };
+    showToast(`「${name}」を更新しました ✓`);
+  }
+  closeModal();
+  render();
+
+  // 実装時はここでGoogle Sheetsへ書き戻し
+  // syncToSheets(data);
+}
+
+function deleteShop() {
+  if (editingId === null) return;
+  const s = shops.find(x => x.id === editingId);
+  if (!confirm(`「${s.name}」を削除しますか？\nこの操作は取り消せません。`)) return;
+  shops = shops.filter(x => x.id !== editingId);
+  closeModal();
+  showToast(`削除しました`);
+  render();
+}
+
+function syncNow() {
+  showToast("Google Sheetsと同期しました ✓");
+}
+
+function showToast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  setTimeout(() => t.classList.remove("show"), 1800);
+}
+
+render();
+</script>
+
+</body>
+</html>

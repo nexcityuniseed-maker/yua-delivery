@@ -1,0 +1,1152 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+<title>ルート作成 - 日本ユーア東海</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic", sans-serif;
+  background: #f5f5f5;
+  color: #111;
+  -webkit-font-smoothing: antialiased;
+  font-size: 17px;
+  line-height: 1.5;
+  padding-bottom: 100px;
+}
+
+/* ======== ステップバー ======== */
+.stepper {
+  background: white;
+  padding: 16px 20px;
+  border-bottom: 2px solid #e5e5e5;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+.stepper-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #666;
+  margin-bottom: 10px;
+}
+.stepper-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.step-circle {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #e5e5e5;
+  color: #999;
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+  font-size: 15px;
+  flex-shrink: 0;
+  transition: all 0.3s;
+}
+.step-circle.active {
+  background: #1a5fb4;
+  color: white;
+  box-shadow: 0 0 0 4px rgba(26,95,180,0.2);
+}
+.step-circle.done {
+  background: #2e7d32;
+  color: white;
+}
+.step-circle.done::after {
+  content: '✓';
+  font-size: 18px;
+}
+.step-circle.done .step-num { display: none; }
+.step-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: #999;
+  white-space: nowrap;
+}
+.step-label.active { color: #1a5fb4; }
+.step-label.done { color: #2e7d32; }
+.step-line {
+  flex: 1;
+  height: 3px;
+  background: #e5e5e5;
+  min-width: 16px;
+}
+.step-line.done { background: #2e7d32; }
+
+/* ======== 共通 ======== */
+.page { display: none; padding: 20px 16px 0; }
+.page.active { display: block; }
+.page-header {
+  margin-bottom: 20px;
+}
+.page-title {
+  font-size: 24px;
+  font-weight: 800;
+  margin-bottom: 6px;
+}
+.page-subtitle {
+  font-size: 15px;
+  color: #666;
+  line-height: 1.5;
+}
+
+.card {
+  background: white;
+  border-radius: 14px;
+  padding: 18px;
+  margin-bottom: 14px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+
+/* ======== ページ1：車両選択 ======== */
+.summary-box {
+  background: #e3f2fd;
+  border: 2px solid #1a5fb4;
+  border-radius: 14px;
+  padding: 16px 20px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.summary-icon {
+  font-size: 36px;
+  line-height: 1;
+}
+.summary-text { flex: 1; }
+.summary-title {
+  font-size: 16px;
+  font-weight: 800;
+  color: #0d47a1;
+  margin-bottom: 2px;
+}
+.summary-detail {
+  font-size: 14px;
+  color: #0d47a1;
+}
+
+.section-label {
+  font-size: 15px;
+  font-weight: 800;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.section-label::before {
+  content: '';
+  width: 4px;
+  height: 18px;
+  background: #1a5fb4;
+  border-radius: 2px;
+}
+
+/* 台数選択 */
+.count-selector {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-bottom: 20px;
+}
+.count-btn {
+  background: white;
+  border: 3px solid #e5e5e5;
+  border-radius: 14px;
+  padding: 18px 10px;
+  font-family: inherit;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.15s;
+}
+.count-btn.on {
+  border-color: #1a5fb4;
+  background: #e3f2fd;
+}
+.count-btn-num {
+  font-size: 32px;
+  font-weight: 900;
+  color: #1a5fb4;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+.count-btn-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: #666;
+}
+
+/* 車両カード */
+.vehicle-card {
+  background: white;
+  border: 2px solid #e5e5e5;
+  border-radius: 14px;
+  padding: 16px;
+  margin-bottom: 10px;
+  position: relative;
+}
+.vehicle-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.vehicle-badge {
+  background: #1a5fb4;
+  color: white;
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  font-weight: 900;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+.vehicle-label {
+  font-size: 18px;
+  font-weight: 800;
+}
+.vehicle-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.v-field {
+  display: block;
+}
+.v-field-label {
+  font-size: 13px;
+  color: #666;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+.v-field-input, .v-field-select {
+  width: 100%;
+  padding: 11px 12px;
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  font-size: 16px;
+  font-family: inherit;
+  background: white;
+}
+.v-field-input:focus, .v-field-select:focus {
+  outline: none;
+  border-color: #1a5fb4;
+}
+
+/* 詳細オプション */
+.options-card {
+  background: white;
+  border-radius: 14px;
+  padding: 18px;
+  margin-bottom: 14px;
+}
+.option-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 0;
+  border-bottom: 1px solid #eee;
+}
+.option-row:last-child { border-bottom: none; }
+.option-label-box { flex: 1; padding-right: 12px; }
+.option-label {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 2px;
+}
+.option-desc {
+  font-size: 13px;
+  color: #666;
+  line-height: 1.4;
+}
+/* トグルスイッチ */
+.toggle {
+  position: relative;
+  width: 52px;
+  height: 30px;
+  background: #ddd;
+  border-radius: 15px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.2s;
+}
+.toggle.on { background: #1a5fb4; }
+.toggle::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 24px;
+  height: 24px;
+  background: white;
+  border-radius: 50%;
+  transition: transform 0.2s;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+.toggle.on::after { transform: translateX(22px); }
+
+/* 出発地点 */
+.depot-input {
+  width: 100%;
+  padding: 14px 16px;
+  border: 2px solid #ddd;
+  border-radius: 10px;
+  font-size: 16px;
+  font-family: inherit;
+  margin-top: 8px;
+}
+
+/* ======== ページ2：計算中 ======== */
+.calc-wrap {
+  padding: 60px 20px 40px;
+  text-align: center;
+}
+.calc-spinner {
+  width: 80px;
+  height: 80px;
+  border: 6px solid #e3f2fd;
+  border-top-color: #1a5fb4;
+  border-radius: 50%;
+  margin: 0 auto 24px;
+  animation: spin 1s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.calc-title {
+  font-size: 22px;
+  font-weight: 800;
+  margin-bottom: 8px;
+}
+.calc-msg {
+  font-size: 15px;
+  color: #666;
+  margin-bottom: 30px;
+}
+.calc-steps {
+  text-align: left;
+  background: white;
+  padding: 20px;
+  border-radius: 14px;
+  max-width: 360px;
+  margin: 0 auto;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+.calc-step {
+  font-size: 15px;
+  padding: 10px 0;
+  color: #999;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-bottom: 1px solid #f0f0f0;
+}
+.calc-step:last-child { border-bottom: none; }
+.calc-step.active { color: #1a5fb4; font-weight: 800; }
+.calc-step.done { color: #2e7d32; font-weight: 700; }
+.calc-step-icon { font-size: 20px; flex-shrink: 0; }
+
+/* ======== ページ3：結果プレビュー ======== */
+.result-summary {
+  background: linear-gradient(135deg, #2e7d32, #43a047);
+  color: white;
+  border-radius: 14px;
+  padding: 20px;
+  margin-bottom: 16px;
+  text-align: center;
+}
+.result-check {
+  font-size: 48px;
+  margin-bottom: 8px;
+}
+.result-title {
+  font-size: 22px;
+  font-weight: 800;
+  margin-bottom: 4px;
+}
+.result-detail {
+  font-size: 15px;
+  opacity: 0.95;
+}
+
+/* 車両ごとの結果 */
+.result-vehicle {
+  background: white;
+  border-radius: 14px;
+  margin-bottom: 14px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+.result-vehicle-head {
+  background: #1a5fb4;
+  color: white;
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+}
+.result-vehicle-head.v2 { background: #2e7d32; }
+.result-vehicle-head.v3 { background: #ef6c00; }
+.result-vehicle-head.v4 { background: #6a1b9a; }
+.result-vehicle-head.v5 { background: #c62828; }
+
+.result-v-badge {
+  background: white;
+  color: #1a5fb4;
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  font-weight: 900;
+  font-size: 16px;
+}
+.result-vehicle-head.v2 .result-v-badge { color: #2e7d32; }
+.result-vehicle-head.v3 .result-v-badge { color: #ef6c00; }
+.result-vehicle-head.v4 .result-v-badge { color: #6a1b9a; }
+.result-vehicle-head.v5 .result-v-badge { color: #c62828; }
+
+.result-v-info { flex: 1; }
+.result-v-title {
+  font-size: 17px;
+  font-weight: 800;
+}
+.result-v-sub {
+  font-size: 13px;
+  opacity: 0.9;
+  margin-top: 2px;
+}
+.result-v-toggle {
+  font-size: 20px;
+  transition: transform 0.2s;
+}
+.result-vehicle.collapsed .result-v-toggle { transform: rotate(-90deg); }
+
+.result-v-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  padding: 12px 0;
+  border-bottom: 1px solid #eee;
+  background: #fafafa;
+}
+.result-stat {
+  text-align: center;
+  padding: 8px 4px;
+  border-right: 1px solid #eee;
+}
+.result-stat:last-child { border-right: none; }
+.result-stat-num {
+  font-size: 22px;
+  font-weight: 900;
+  color: #1a5fb4;
+}
+.result-stat-label {
+  font-size: 11px;
+  color: #666;
+  font-weight: 700;
+  margin-top: 2px;
+}
+
+.result-stops {
+  padding: 12px;
+  max-height: 400px;
+  overflow-y: auto;
+}
+.result-vehicle.collapsed .result-stops { display: none; }
+.result-vehicle.collapsed .result-v-stats { display: none; }
+
+.result-stop {
+  padding: 12px 10px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px dashed #eee;
+  cursor: grab;
+  touch-action: none;
+  transition: background 0.15s;
+}
+.result-stop:last-child { border-bottom: none; }
+.result-stop.dragging {
+  opacity: 0.9;
+  background: #e3f2fd;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  border-radius: 8px;
+}
+.result-stop.drag-over {
+  border-top: 3px solid #1a5fb4;
+}
+.result-stop-num {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #e3f2fd;
+  color: #1a5fb4;
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+.result-stop-body { flex: 1; min-width: 0; }
+.result-stop-name {
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 3px;
+  line-height: 1.3;
+}
+.result-stop-meta {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  font-size: 12px;
+}
+.result-stop-time {
+  color: #1a5fb4;
+  font-weight: 700;
+}
+.result-stop-area {
+  background: #f0f0f0;
+  color: #666;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-weight: 600;
+}
+.result-stop-move {
+  background: none;
+  border: 1px solid #ddd;
+  padding: 6px 10px;
+  font-size: 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  color: #666;
+  font-family: inherit;
+  font-weight: 700;
+}
+
+/* フッター（アクション） */
+.action-footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: white;
+  padding: 14px 16px calc(14px + env(safe-area-inset-bottom));
+  box-shadow: 0 -4px 16px rgba(0,0,0,0.08);
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 10px;
+  z-index: 90;
+}
+.action-footer.single {
+  grid-template-columns: 1fr;
+}
+.btn-back, .btn-next {
+  padding: 18px;
+  border-radius: 12px;
+  border: none;
+  font-family: inherit;
+  font-size: 17px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.btn-back {
+  background: white;
+  color: #111;
+  border: 2px solid #ddd;
+}
+.btn-next {
+  background: #1a5fb4;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.btn-next:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+.btn-complete {
+  background: #2e7d32;
+}
+
+/* トースト */
+.toast {
+  position: fixed;
+  bottom: calc(120px + env(safe-area-inset-bottom));
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: #2e7d32;
+  color: white;
+  padding: 16px 24px;
+  border-radius: 12px;
+  font-size: 17px;
+  font-weight: 700;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s, transform 0.3s;
+  z-index: 300;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+</style>
+</head>
+<body>
+
+<!-- ステップバー -->
+<div class="stepper">
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+    <a href="index.html" style="color:#1a5fb4;text-decoration:none;font-size:20px;background:#e3f2fd;width:32px;height:32px;border-radius:50%;display:grid;place-items:center;flex-shrink:0;">←</a>
+    <div class="stepper-title" style="margin:0;">🗺 ルート作成</div>
+  </div>
+  <div class="stepper-row">
+    <div class="step-circle done"><span class="step-num">1</span></div>
+    <div class="step-label done">取込</div>
+    <div class="step-line done"></div>
+    <div class="step-circle active" id="s2"><span class="step-num">2</span></div>
+    <div class="step-label active" id="s2Label">車両設定</div>
+    <div class="step-line" id="line2"></div>
+    <div class="step-circle" id="s3"><span class="step-num">3</span></div>
+    <div class="step-label" id="s3Label">ルート作成</div>
+    <div class="step-line" id="line3"></div>
+    <div class="step-circle" id="s4"><span class="step-num">4</span></div>
+    <div class="step-label" id="s4Label">確認</div>
+  </div>
+</div>
+
+<!-- ===== ページ1：車両設定 ===== -->
+<div class="page active" id="page1">
+  <div class="page-header">
+    <div class="page-title">車両とドライバーを設定</div>
+    <div class="page-subtitle">何台で配送するか決めて、ドライバー名を入力してください</div>
+  </div>
+
+  <div class="summary-box">
+    <div class="summary-icon">📦</div>
+    <div class="summary-text">
+      <div class="summary-title">取り込んだ配送先</div>
+      <div class="summary-detail"><strong id="totalDeliveryCount">23</strong> 件（名古屋市 18件・豊田市 3件・岡崎市 2件）</div>
+    </div>
+  </div>
+
+  <!-- 台数選択 -->
+  <div class="section-label">配送する車の台数</div>
+  <div class="count-selector" id="countSelector">
+    <div class="count-btn" data-count="2"><div class="count-btn-num">2</div><div class="count-btn-label">台で配送</div></div>
+    <div class="count-btn on" data-count="3"><div class="count-btn-num">3</div><div class="count-btn-label">台で配送</div></div>
+    <div class="count-btn" data-count="4"><div class="count-btn-num">4</div><div class="count-btn-label">台で配送</div></div>
+    <div class="count-btn" data-count="5"><div class="count-btn-num">5</div><div class="count-btn-label">台で配送</div></div>
+  </div>
+
+  <!-- 車両リスト -->
+  <div class="section-label">車両とドライバー</div>
+  <div id="vehicleList"></div>
+
+  <!-- 出発地点 -->
+  <div class="card">
+    <div class="section-label" style="margin-bottom: 6px;">出発地点</div>
+    <div style="font-size: 13px; color: #666; margin-bottom: 10px;">全車両の出発地点</div>
+    <input type="text" class="depot-input" id="depotInput" value="愛知県名古屋市西区浄心1-1-1（本社倉庫）">
+  </div>
+
+  <!-- 詳細オプション -->
+  <div class="section-label">ルート作成のオプション</div>
+  <div class="options-card">
+    <div class="option-row">
+      <div class="option-label-box">
+        <div class="option-label">エリア別に割り振る</div>
+        <div class="option-desc">近いエリアの店舗を同じ車両にまとめます（推奨）</div>
+      </div>
+      <div class="toggle on" id="optArea" onclick="toggleOption(this)"></div>
+    </div>
+    <div class="option-row">
+      <div class="option-label-box">
+        <div class="option-label">希望時間を優先する</div>
+        <div class="option-desc">時間指定のある店舗を先に回ります</div>
+      </div>
+      <div class="toggle on" id="optTime" onclick="toggleOption(this)"></div>
+    </div>
+    <div class="option-row">
+      <div class="option-label-box">
+        <div class="option-label">件数を均等に分ける</div>
+        <div class="option-desc">各車両の件数をできるだけ同じにします</div>
+      </div>
+      <div class="toggle on" id="optEven" onclick="toggleOption(this)"></div>
+    </div>
+  </div>
+
+  <div style="height:20px"></div>
+</div>
+
+<!-- ===== ページ2：計算中 ===== -->
+<div class="page" id="page2">
+  <div class="calc-wrap">
+    <div class="calc-spinner"></div>
+    <div class="calc-title">ルートを作成しています…</div>
+    <div class="calc-msg">しばらくお待ちください（10秒ほど）</div>
+    <div class="calc-steps" id="calcSteps">
+      <div class="calc-step active" id="cs1">
+        <span class="calc-step-icon">⏳</span>
+        <span>エリアごとに店舗をグループ分け中…</span>
+      </div>
+      <div class="calc-step" id="cs2">
+        <span class="calc-step-icon">⋯</span>
+        <span>各車両に振り分け中…</span>
+      </div>
+      <div class="calc-step" id="cs3">
+        <span class="calc-step-icon">⋯</span>
+        <span>最短ルートを計算中…</span>
+      </div>
+      <div class="calc-step" id="cs4">
+        <span class="calc-step-icon">⋯</span>
+        <span>希望時間に合わせて調整中…</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== ページ3：結果 ===== -->
+<div class="page" id="page3">
+  <div class="page-header">
+    <div class="page-title">ルートが完成しました</div>
+    <div class="page-subtitle">内容を確認して問題なければ確定してください</div>
+  </div>
+
+  <div class="result-summary">
+    <div class="result-check">✓</div>
+    <div class="result-title">ルート作成完了</div>
+    <div class="result-detail" id="resultSummaryDetail">3台の車両で 23件 の配送先を回ります</div>
+  </div>
+
+  <div style="font-size:13px; color:#666; text-align:center; margin-bottom:12px;">
+    💡 店舗を長押しすると車両間で移動できます
+  </div>
+
+  <div id="resultVehicles"></div>
+
+  <div style="height:20px"></div>
+</div>
+
+<!-- フッター -->
+<div class="action-footer" id="footer">
+  <button class="btn-back" onclick="goBack()">戻る</button>
+  <button class="btn-next" id="nextBtn" onclick="goNext()">
+    次へ <span>→</span>
+  </button>
+</div>
+
+<div class="toast" id="toast"><span id="toastText"></span></div>
+
+<script>
+// ===== データ =====
+// 取り込み済みの配送先（実際はCSV/PDFから来る）
+const deliveryList = [
+  { id: 1, name: "焼肉大将軍 名駅店", area: "名古屋中村区", time: "10:00", items: "割り箸10袋" },
+  { id: 2, name: "ラーメン一番星", area: "名古屋中村区", time: "9:30", items: "麺20kg" },
+  { id: 3, name: "カフェ ベル", area: "名古屋中区", time: "10:20", items: "コーヒー豆5kg" },
+  { id: 4, name: "居酒屋まるきん 栄店", area: "名古屋中区", time: "11:30", items: "お米20kg" },
+  { id: 5, name: "寿司処 江戸", area: "名古屋中区", time: "12:15", items: "醤油5L" },
+  { id: 6, name: "焼き鳥 鳥政", area: "名古屋中区", time: "13:00", items: "備長炭15kg" },
+  { id: 7, name: "中華料理 龍門", area: "名古屋東区", time: "13:45", items: "油18L" },
+  { id: 8, name: "和食 さくら", area: "名古屋東区", time: "14:20", items: "お米30kg" },
+  { id: 9, name: "とんかつ たなか", area: "名古屋千種区", time: "15:00", items: "パン粉10kg" },
+  { id: 10, name: "喫茶マドンナ", area: "名古屋千種区", time: "15:40", items: "砂糖5kg" },
+  { id: 11, name: "イタリアン ベラ", area: "名古屋昭和区", time: "16:20", items: "小麦粉20kg" },
+  { id: 12, name: "居酒屋 ほろ酔い", area: "名古屋瑞穂区", time: "17:00", items: "お米20kg" },
+  { id: 13, name: "串カツ 黒門", area: "名古屋中区", time: "11:00", items: "串300本" },
+  { id: 14, name: "カレーハウス グル", area: "名古屋中村区", time: "9:45", items: "ライス30kg" },
+  { id: 15, name: "お好み焼き 粉や", area: "名古屋東区", time: "14:00", items: "小麦粉15kg" },
+  { id: 16, name: "うなぎ屋 辰巳", area: "名古屋中区", time: "10:30", items: "備長炭20kg" },
+  { id: 17, name: "牛タン 利久", area: "名古屋東区", time: "14:30", items: "塩10kg" },
+  { id: 18, name: "天ぷら処 天富", area: "名古屋中区", time: "12:00", items: "油30L" },
+  { id: 19, name: "とんかつ たなか 豊田店", area: "豊田市", time: "10:00", items: "パン粉15kg" },
+  { id: 20, name: "喫茶 木漏れ日", area: "豊田市", time: "11:00", items: "砂糖3kg" },
+  { id: 21, name: "ラーメン龍の家", area: "豊田市", time: "12:00", items: "麺15kg" },
+  { id: 22, name: "居酒屋 ほろ酔い 岡崎店", area: "岡崎市", time: "16:30", items: "お米20kg" },
+  { id: 23, name: "焼肉 牛鉄 岡崎店", area: "岡崎市", time: "17:30", items: "備長炭25kg" },
+];
+
+// 状態
+let currentPage = 1;
+let vehicleCount = 3;
+let vehicles = [];
+let options = { area: true, time: true, even: true };
+let depot = "愛知県名古屋市西区浄心1-1-1（本社倉庫）";
+let routeResult = []; // [{vehicleId, stops: [...]}]
+
+// ===== 初期化 =====
+document.getElementById("totalDeliveryCount").textContent = deliveryList.length;
+
+function initVehicles(count) {
+  vehicles = [];
+  const defaultDrivers = ["山田さん", "佐藤さん", "鈴木さん", "高橋さん", "田中さん"];
+  for (let i = 0; i < count; i++) {
+    vehicles.push({
+      id: i + 1,
+      driver: defaultDrivers[i] || "",
+      startTime: "9:00",
+    });
+  }
+  renderVehicles();
+}
+
+function renderVehicles() {
+  const el = document.getElementById("vehicleList");
+  el.innerHTML = vehicles.map((v, i) => `
+    <div class="vehicle-card">
+      <div class="vehicle-head">
+        <div class="vehicle-badge">${v.id}号車</div>
+        <div class="vehicle-label">ドライバー情報</div>
+      </div>
+      <div class="vehicle-grid">
+        <div class="v-field">
+          <div class="v-field-label">ドライバー名</div>
+          <input type="text" class="v-field-input" value="${v.driver}" onchange="updateVehicle(${i}, 'driver', this.value)" placeholder="名前を入力">
+        </div>
+        <div class="v-field">
+          <div class="v-field-label">出発時刻</div>
+          <input type="time" class="v-field-input" value="${v.startTime}" onchange="updateVehicle(${i}, 'startTime', this.value)">
+        </div>
+      </div>
+    </div>
+  `).join("");
+}
+
+function updateVehicle(i, field, value) {
+  vehicles[i][field] = value;
+}
+
+// 台数変更
+document.querySelectorAll(".count-btn").forEach(b => {
+  b.addEventListener("click", () => {
+    document.querySelectorAll(".count-btn").forEach(x => x.classList.remove("on"));
+    b.classList.add("on");
+    vehicleCount = parseInt(b.dataset.count);
+    initVehicles(vehicleCount);
+  });
+});
+
+// トグル
+function toggleOption(el) {
+  el.classList.toggle("on");
+  const key = el.id.replace("opt", "").toLowerCase();
+  options[key] = el.classList.contains("on");
+}
+
+// ===== ページ遷移 =====
+function goToPage(n) {
+  currentPage = n;
+  document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+  document.getElementById("page" + n).classList.add("active");
+  updateStepper();
+  updateFooter();
+  window.scrollTo(0, 0);
+}
+
+function updateStepper() {
+  const s2 = document.getElementById("s2");
+  const s3 = document.getElementById("s3");
+  const s4 = document.getElementById("s4");
+  const s2L = document.getElementById("s2Label");
+  const s3L = document.getElementById("s3Label");
+  const s4L = document.getElementById("s4Label");
+  const line2 = document.getElementById("line2");
+  const line3 = document.getElementById("line3");
+
+  [s2, s3, s4].forEach(e => { e.classList.remove("active", "done"); });
+  [s2L, s3L, s4L].forEach(e => { e.classList.remove("active", "done"); });
+  [line2, line3].forEach(e => e.classList.remove("done"));
+
+  if (currentPage === 1) {
+    s2.classList.add("active"); s2L.classList.add("active");
+  } else if (currentPage === 2) {
+    s2.classList.add("done"); s2L.classList.add("done"); line2.classList.add("done");
+    s3.classList.add("active"); s3L.classList.add("active");
+  } else if (currentPage === 3) {
+    s2.classList.add("done"); s2L.classList.add("done"); line2.classList.add("done");
+    s3.classList.add("done"); s3L.classList.add("done"); line3.classList.add("done");
+    s4.classList.add("active"); s4L.classList.add("active");
+  }
+}
+
+function updateFooter() {
+  const footer = document.getElementById("footer");
+  const nextBtn = document.getElementById("nextBtn");
+  if (currentPage === 1) {
+    footer.classList.remove("single");
+    nextBtn.innerHTML = 'ルートを作成する <span>→</span>';
+    nextBtn.className = "btn-next";
+  } else if (currentPage === 2) {
+    footer.style.display = "none";
+    return;
+  } else if (currentPage === 3) {
+    footer.classList.remove("single");
+    nextBtn.innerHTML = '✓ このルートで確定';
+    nextBtn.className = "btn-next btn-complete";
+  }
+  footer.style.display = "grid";
+}
+
+function goBack() {
+  if (currentPage === 1) {
+    if (confirm("取り込み画面に戻りますか？\n入力した情報は失われます。")) {
+      alert("（デモなので戻れません。実装時は取り込み画面に戻ります）");
+    }
+  } else if (currentPage === 3) {
+    goToPage(1);
+  }
+}
+
+function goNext() {
+  if (currentPage === 1) {
+    // バリデーション
+    const missingDriver = vehicles.find(v => !v.driver.trim());
+    if (missingDriver) {
+      alert(`${missingDriver.id}号車のドライバー名を入力してください`);
+      return;
+    }
+    goToPage(2);
+    runRouteOptimization();
+  } else if (currentPage === 3) {
+    // 確定
+    if (confirm("このルートで確定しますか？\nドライバーのアプリに配信されます。")) {
+      showToast("✓ ルートを確定し、各ドライバーに配信しました");
+      setTimeout(() => {
+        alert("ドライバー別のアプリ画面に遷移します\n（デモなのでここで終わります）");
+      }, 1500);
+    }
+  }
+}
+
+// ===== ルート最適化（シミュレーション） =====
+async function runRouteOptimization() {
+  await sleep(900);
+  setCalcStep(1, 'done'); setCalcStep(2, 'active');
+  await sleep(1100);
+  setCalcStep(2, 'done'); setCalcStep(3, 'active');
+  await sleep(1200);
+  setCalcStep(3, 'done'); setCalcStep(4, 'active');
+  await sleep(900);
+  setCalcStep(4, 'done');
+  await sleep(500);
+
+  // 実際のルート振り分けロジック（エリアベース）
+  routeResult = distributeByArea();
+
+  renderResults();
+  goToPage(3);
+}
+
+function setCalcStep(n, state) {
+  const el = document.getElementById("cs" + n);
+  el.className = "calc-step " + state;
+  const icon = el.querySelector(".calc-step-icon");
+  icon.textContent = state === 'done' ? '✓' : state === 'active' ? '⏳' : '⋯';
+}
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+function distributeByArea() {
+  // エリアごとにグルーピング
+  const byArea = {};
+  deliveryList.forEach(d => {
+    if (!byArea[d.area]) byArea[d.area] = [];
+    byArea[d.area].push(d);
+  });
+
+  // 車両ごとの格納箱
+  const buckets = vehicles.map(v => ({ ...v, stops: [] }));
+
+  // エリアごとに最も少ない車両に割り当て（均等化）
+  const areas = Object.keys(byArea);
+  areas.forEach(area => {
+    // 岡崎・豊田は遠いのでなるべく同じ車にまとめる
+    const stops = byArea[area];
+    // 最も件数の少ない車両を選ぶ
+    stops.forEach((stop, idx) => {
+      if (options.area && idx === 0) {
+        // エリアの最初の店舗は最も空いてる車へ
+        buckets.sort((a, b) => a.stops.length - b.stops.length);
+      }
+      buckets.sort((a, b) => a.stops.length - b.stops.length);
+      buckets[0].stops.push(stop);
+    });
+  });
+
+  // 各車両内で時間順にソート
+  if (options.time) {
+    buckets.forEach(b => {
+      b.stops.sort((a, b) => {
+        return timeToMinutes(a.time) - timeToMinutes(b.time);
+      });
+    });
+  }
+
+  // 車両番号順に並び替えて返す
+  buckets.sort((a, b) => a.id - b.id);
+  return buckets;
+}
+
+function timeToMinutes(t) {
+  if (!t) return 9999;
+  const [h, m] = t.split(":").map(n => parseInt(n));
+  return h * 60 + (m || 0);
+}
+
+function renderResults() {
+  const el = document.getElementById("resultVehicles");
+  const total = routeResult.reduce((sum, v) => sum + v.stops.length, 0);
+  document.getElementById("resultSummaryDetail").textContent =
+    `${vehicles.length}台の車両で ${total}件 の配送先を回ります`;
+
+  el.innerHTML = routeResult.map((v, vi) => {
+    const firstTime = v.stops[0]?.time || "—";
+    const lastTime = v.stops[v.stops.length - 1]?.time || "—";
+    const areas = [...new Set(v.stops.map(s => s.area))];
+    return `
+      <div class="result-vehicle" data-vi="${vi}">
+        <div class="result-vehicle-head v${v.id}" onclick="toggleVehicle(${vi})">
+          <div class="result-v-badge">${v.id}号車</div>
+          <div class="result-v-info">
+            <div class="result-v-title">${v.driver}</div>
+            <div class="result-v-sub">${v.stops.length}件 · ${firstTime} 〜 ${lastTime}</div>
+          </div>
+          <div class="result-v-toggle">▼</div>
+        </div>
+        <div class="result-v-stats">
+          <div class="result-stat">
+            <div class="result-stat-num">${v.stops.length}</div>
+            <div class="result-stat-label">配送件数</div>
+          </div>
+          <div class="result-stat">
+            <div class="result-stat-num">${areas.length}</div>
+            <div class="result-stat-label">エリア</div>
+          </div>
+          <div class="result-stat">
+            <div class="result-stat-num">~${estimateHours(v.stops.length)}h</div>
+            <div class="result-stat-label">所要時間</div>
+          </div>
+        </div>
+        <div class="result-stops">
+          ${v.stops.map((s, si) => `
+            <div class="result-stop" data-vi="${vi}" data-si="${si}" draggable="true">
+              <div class="result-stop-num">${si + 1}</div>
+              <div class="result-stop-body">
+                <div class="result-stop-name">${s.name}</div>
+                <div class="result-stop-meta">
+                  <span class="result-stop-time">⏰ ${s.time}</span>
+                  <span class="result-stop-area">${s.area}</span>
+                </div>
+              </div>
+              <button class="result-stop-move" onclick="moveStopPrompt(${vi}, ${si})">移動</button>
+            </div>
+          `).join("")}
+        </div>
+      </div>
+    `;
+  }).join("");
+
+  attachStopDragHandlers();
+}
+
+function estimateHours(n) {
+  // 1件あたり約20分と仮定
+  return (n * 20 / 60).toFixed(1);
+}
+
+function toggleVehicle(vi) {
+  const el = document.querySelector(`.result-vehicle[data-vi="${vi}"]`);
+  el.classList.toggle("collapsed");
+}
+
+// 店舗の車両間移動
+function moveStopPrompt(vi, si) {
+  const stop = routeResult[vi].stops[si];
+  const otherVehicles = routeResult.filter((_, i) => i !== vi);
+  if (otherVehicles.length === 0) return;
+
+  const target = prompt(
+    `「${stop.name}」をどの車両に移動しますか？\n\n${otherVehicles.map(v => `${v.id}：${v.id}号車（${v.driver}） - ${v.stops.length}件`).join("\n")}\n\n車両番号を入力してください`
+  );
+  if (!target) return;
+  const targetId = parseInt(target);
+  const targetV = routeResult.find(v => v.id === targetId);
+  if (!targetV || targetV === routeResult[vi]) {
+    alert("無効な車両番号です");
+    return;
+  }
+
+  // 移動
+  routeResult[vi].stops.splice(si, 1);
+  targetV.stops.push(stop);
+  targetV.stops.sort((a, b) => timeToMinutes(a.time) - timeToMinutes(b.time));
+  renderResults();
+  showToast(`✓ 「${stop.name}」を${targetId}号車に移動`);
+}
+
+// ドラッグ＆ドロップ（PC用）
+let dragSrc = null;
+function attachStopDragHandlers() {
+  document.querySelectorAll(".result-stop").forEach(el => {
+    el.addEventListener("dragstart", function(e) {
+      dragSrc = { vi: parseInt(this.dataset.vi), si: parseInt(this.dataset.si) };
+      this.classList.add("dragging");
+      e.dataTransfer.effectAllowed = "move";
+    });
+    el.addEventListener("dragover", function(e) {
+      e.preventDefault();
+      document.querySelectorAll(".result-stop").forEach(x => x.classList.remove("drag-over"));
+      this.classList.add("drag-over");
+    });
+    el.addEventListener("drop", function(e) {
+      e.preventDefault();
+      const dst = { vi: parseInt(this.dataset.vi), si: parseInt(this.dataset.si) };
+      if (dragSrc && (dragSrc.vi !== dst.vi || dragSrc.si !== dst.si)) {
+        const stop = routeResult[dragSrc.vi].stops.splice(dragSrc.si, 1)[0];
+        if (dragSrc.vi === dst.vi && dragSrc.si < dst.si) {
+          routeResult[dst.vi].stops.splice(dst.si - 1, 0, stop);
+        } else {
+          routeResult[dst.vi].stops.splice(dst.si, 0, stop);
+        }
+        renderResults();
+        showToast(`✓ 順番を変更しました`);
+      }
+    });
+    el.addEventListener("dragend", function() {
+      document.querySelectorAll(".result-stop").forEach(x => {
+        x.classList.remove("dragging");
+        x.classList.remove("drag-over");
+      });
+      dragSrc = null;
+    });
+  });
+}
+
+// トースト
+function showToast(msg) {
+  const t = document.getElementById("toast");
+  document.getElementById("toastText").textContent = msg;
+  t.classList.add("show");
+  setTimeout(() => t.classList.remove("show"), 2200);
+}
+
+// 初期化
+initVehicles(vehicleCount);
+updateFooter();
+</script>
+
+</body>
+</html>

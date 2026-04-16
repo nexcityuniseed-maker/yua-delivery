@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+<title>配送アプリ - 日本ユーア東海</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic", sans-serif;
+  background: #f5f5f5;
+  color: #111;
+  -webkit-font-smoothing: antialiased;
+  font-size: 17px;
+  line-height: 1.5;
+  min-height: 100vh;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.hero {
+  background: linear-gradient(135deg, #1a5fb4, #0d47a1);
+  color: white;
+  padding: 40px 24px 50px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+.hero::before {
+  content: '🚚';
+  position: absolute;
+  font-size: 180px;
+  opacity: 0.08;
+  right: -20px;
+  top: -20px;
+  line-height: 1;
+}
+.hero-icon {
+  font-size: 56px;
+  margin-bottom: 12px;
+}
+.hero-title {
+  font-size: 26px;
+  font-weight: 900;
+  margin-bottom: 6px;
+  letter-spacing: 0.02em;
+}
+.hero-subtitle {
+  font-size: 15px;
+  opacity: 0.92;
+  letter-spacing: 0.05em;
+}
+.hero-company {
+  font-size: 13px;
+  opacity: 0.8;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255,255,255,0.2);
+  display: inline-block;
+  padding-left: 20px;
+  padding-right: 20px;
+}
+
+.menu-section {
+  padding: 30px 16px 20px;
+}
+
+.menu-label {
+  font-size: 14px;
+  font-weight: 800;
+  color: #666;
+  margin-bottom: 12px;
+  padding-left: 4px;
+  letter-spacing: 0.05em;
+}
+
+.menu-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.menu-card {
+  background: white;
+  border-radius: 16px;
+  padding: 20px 16px;
+  text-align: center;
+  text-decoration: none;
+  color: inherit;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  transition: transform 0.15s, box-shadow 0.15s;
+  position: relative;
+  overflow: hidden;
+  display: block;
+}
+.menu-card:active {
+  transform: scale(0.96);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+}
+.menu-card.primary {
+  background: linear-gradient(135deg, #1a5fb4, #0d47a1);
+  color: white;
+  grid-column: span 2;
+  padding: 24px 20px;
+}
+.menu-card.primary .menu-card-icon { font-size: 48px; }
+.menu-card.primary .menu-card-title { font-size: 22px; color: white; }
+.menu-card.primary .menu-card-desc { color: rgba(255,255,255,0.85); }
+
+.menu-card-icon {
+  font-size: 40px;
+  margin-bottom: 8px;
+  line-height: 1;
+}
+.menu-card-title {
+  font-size: 17px;
+  font-weight: 800;
+  margin-bottom: 4px;
+  color: #111;
+}
+.menu-card-desc {
+  font-size: 12px;
+  color: #666;
+  line-height: 1.4;
+}
+.menu-card-arrow {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  font-size: 18px;
+  color: #ccc;
+}
+.menu-card.primary .menu-card-arrow { color: rgba(255,255,255,0.6); }
+
+.info-card {
+  background: white;
+  border-radius: 12px;
+  padding: 16px 18px;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.info-card-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  background: #e3f2fd;
+  display: grid;
+  place-items: center;
+  font-size: 22px;
+  flex-shrink: 0;
+}
+.info-card-body { flex: 1; }
+.info-card-title {
+  font-size: 15px;
+  font-weight: 800;
+  margin-bottom: 2px;
+}
+.info-card-desc {
+  font-size: 13px;
+  color: #666;
+  line-height: 1.4;
+}
+
+.version-box {
+  text-align: center;
+  padding: 30px 20px 20px;
+  color: #999;
+  font-size: 12px;
+}
+.version-title {
+  font-weight: 700;
+  color: #666;
+  margin-bottom: 4px;
+}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-icon">🚚</div>
+  <div class="hero-title">配送アプリ</div>
+  <div class="hero-subtitle">Delivery Management</div>
+  <div class="hero-company">株式会社 日本ユーア東海</div>
+</div>
+
+<div class="menu-section">
+  <div class="menu-label">📋 ドライバー向け</div>
+  <div class="menu-grid">
+    <a href="driver.html" class="menu-card primary">
+      <div class="menu-card-arrow">→</div>
+      <div class="menu-card-icon">🚗</div>
+      <div class="menu-card-title">今日の配送ルート</div>
+      <div class="menu-card-desc">配送先の案内・完了チェック</div>
+    </a>
+  </div>
+
+  <div class="menu-label">🗂 管理者向け</div>
+  <div class="menu-grid">
+    <a href="import.html" class="menu-card">
+      <div class="menu-card-arrow">→</div>
+      <div class="menu-card-icon">📥</div>
+      <div class="menu-card-title">リスト取込</div>
+      <div class="menu-card-desc">CSV・PDFから読込</div>
+    </a>
+    <a href="route.html" class="menu-card">
+      <div class="menu-card-arrow">→</div>
+      <div class="menu-card-icon">🗺</div>
+      <div class="menu-card-title">ルート作成</div>
+      <div class="menu-card-desc">車両別に振り分け</div>
+    </a>
+    <a href="shops.html" class="menu-card" style="grid-column: span 2;">
+      <div class="menu-card-arrow">→</div>
+      <div class="menu-card-icon">🏪</div>
+      <div class="menu-card-title">配送先マスタ</div>
+      <div class="menu-card-desc">店舗の追加・編集・削除</div>
+    </a>
+  </div>
+
+  <div class="menu-label">ℹ️ このアプリについて</div>
+  <div class="info-card">
+    <div class="info-card-icon">🧪</div>
+    <div class="info-card-body">
+      <div class="info-card-title">プロトタイプ運用中</div>
+      <div class="info-card-desc">現場で試しながら改善していきます</div>
+    </div>
+  </div>
+  <div class="info-card">
+    <div class="info-card-icon">💬</div>
+    <div class="info-card-body">
+      <div class="info-card-title">改善したい点があれば</div>
+      <div class="info-card-desc">KosukeさんにLINE等で報告してください</div>
+    </div>
+  </div>
+</div>
+
+<div class="version-box">
+  <div class="version-title">YUA Delivery v0.1 (プロトタイプ)</div>
+  <div>© 株式会社 日本ユーア東海</div>
+</div>
+
+</body>
+</html>

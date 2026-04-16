@@ -1,0 +1,1445 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+<title>配送アプリ - 日本ユーア東海</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic", sans-serif;
+  background: #f5f5f5;
+  color: #111;
+  padding-bottom: calc(90px + env(safe-area-inset-bottom));
+  -webkit-font-smoothing: antialiased;
+  font-size: 18px;
+  line-height: 1.5;
+}
+
+/* ======== ヘッダー ======== */
+.header {
+  background: #1a5fb4;
+  color: white;
+  padding: 20px;
+}
+.header-title {
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+.header-date {
+  font-size: 16px;
+  opacity: 0.9;
+  margin-bottom: 16px;
+}
+.progress-row {
+  background: white;
+  border-radius: 12px;
+  padding: 16px 20px;
+  color: #111;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.progress-text {
+  font-size: 20px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.progress-text .done-num {
+  font-size: 32px;
+  color: #1a5fb4;
+}
+.progress-bar {
+  flex: 1;
+  height: 14px;
+  background: #e5e5e5;
+  border-radius: 7px;
+  overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  background: #2e7d32;
+  border-radius: 7px;
+  transition: width 0.4s ease;
+}
+
+/* ======== タブ ======== */
+.tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  background: white;
+  border-bottom: 2px solid #e5e5e5;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+.tab {
+  padding: 18px;
+  background: none;
+  border: none;
+  font-family: inherit;
+  font-size: 18px;
+  font-weight: 700;
+  color: #666;
+  cursor: pointer;
+  position: relative;
+}
+.tab.active {
+  color: #1a5fb4;
+}
+.tab.active::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: #1a5fb4;
+}
+
+/* ======== ルート画面 ======== */
+.route-view { display: block; }
+.route-view.hidden { display: none; }
+
+/* 次の配送先 - 超大きく */
+.next-section {
+  padding: 20px 16px 0;
+}
+.next-label {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1a5fb4;
+  margin-bottom: 10px;
+  padding-left: 4px;
+}
+.next-card {
+  background: white;
+  border-radius: 16px;
+  border: 3px solid #1a5fb4;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+.next-top {
+  background: #1a5fb4;
+  color: white;
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.next-num {
+  background: white;
+  color: #1a5fb4;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 28px;
+  font-weight: 900;
+  flex-shrink: 0;
+}
+.next-of {
+  font-size: 16px;
+  opacity: 0.9;
+}
+.next-of-num {
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.next-body {
+  padding: 20px;
+}
+.next-name {
+  font-size: 26px;
+  font-weight: 800;
+  line-height: 1.3;
+  margin-bottom: 10px;
+  color: #111;
+}
+.next-address {
+  font-size: 17px;
+  color: #444;
+  line-height: 1.5;
+  margin-bottom: 16px;
+}
+
+/* 納品場所 - 超目立つ */
+.delivery-box {
+  background: #fff8e1;
+  border: 2px solid #ffa000;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+.delivery-label {
+  font-size: 14px;
+  font-weight: 700;
+  color: #ef6c00;
+  margin-bottom: 6px;
+}
+.delivery-main {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.delivery-icon {
+  font-size: 40px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.delivery-where {
+  font-size: 22px;
+  font-weight: 800;
+  color: #111;
+  line-height: 1.3;
+}
+.delivery-note {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed #ffa000;
+  font-size: 17px;
+  color: #111;
+  line-height: 1.5;
+}
+.delivery-note::before {
+  content: '💡 ';
+}
+
+.info-row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+  font-size: 17px;
+}
+.info-item {
+  flex: 1;
+  background: #f5f5f5;
+  padding: 12px 14px;
+  border-radius: 10px;
+}
+.info-item-label {
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 4px;
+  font-weight: 600;
+}
+.info-item-value {
+  font-size: 17px;
+  font-weight: 700;
+  color: #111;
+}
+
+/* ボタン - 大きく */
+.btn-row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+  margin-top: 8px;
+}
+.big-btn {
+  padding: 22px;
+  border: none;
+  border-radius: 14px;
+  font-family: inherit;
+  font-size: 22px;
+  font-weight: 800;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  transition: transform 0.1s;
+}
+.big-btn:active { transform: scale(0.97); }
+.btn-nav {
+  background: #1a5fb4;
+  color: white;
+}
+.btn-done {
+  background: #2e7d32;
+  color: white;
+}
+.btn-icon { font-size: 28px; }
+
+.btn-call {
+  background: white;
+  color: #1a5fb4;
+  border: 2px solid #1a5fb4;
+  padding: 16px;
+  margin-top: 10px;
+  border-radius: 12px;
+  font-family: inherit;
+  font-size: 18px;
+  font-weight: 700;
+  width: 100%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+/* ======== 全配送先リスト ======== */
+.all-list {
+  padding: 24px 16px 0;
+}
+.list-title {
+  font-size: 20px;
+  font-weight: 800;
+  margin-bottom: 6px;
+}
+.list-hint {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 14px;
+}
+
+.list-card {
+  background: white;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 10px;
+  display: grid;
+  grid-template-columns: 40px 56px 1fr;
+  gap: 14px;
+  align-items: center;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  transition: opacity 0.3s, background 0.3s;
+}
+.list-card.done {
+  background: #e8f5e9;
+  opacity: 0.7;
+}
+.list-card.done .list-name {
+  text-decoration: line-through;
+  color: #666;
+}
+.list-card.dragging {
+  opacity: 0.9;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+  transform: scale(1.02);
+  z-index: 10;
+  position: relative;
+}
+.list-card.drag-over {
+  border-top: 4px solid #1a5fb4;
+}
+.list-handle {
+  font-size: 32px;
+  color: #999;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  text-align: center;
+  line-height: 1;
+}
+.list-handle:active { cursor: grabbing; }
+.list-card.done .list-handle { visibility: hidden; }
+.list-num {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #e3f2fd;
+  color: #1a5fb4;
+  display: grid;
+  place-items: center;
+  font-size: 24px;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+.list-card.done .list-num {
+  background: #2e7d32;
+  color: white;
+}
+.list-card.done .list-num::after {
+  content: '✓';
+  font-size: 32px;
+}
+.list-card.done .list-num .num-text { display: none; }
+
+.list-body { min-width: 0; }
+.list-name {
+  font-size: 19px;
+  font-weight: 700;
+  margin-bottom: 6px;
+  line-height: 1.3;
+}
+.list-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.list-place {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #fff8e1;
+  color: #ef6c00;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 15px;
+  font-weight: 700;
+}
+.list-time {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1a5fb4;
+}
+
+/* 完了表示 */
+.all-done {
+  text-align: center;
+  padding: 60px 20px;
+  background: white;
+  border-radius: 16px;
+  margin: 20px 16px 0;
+}
+.all-done-icon {
+  font-size: 80px;
+  margin-bottom: 16px;
+}
+.all-done-title {
+  font-size: 26px;
+  font-weight: 800;
+  color: #2e7d32;
+  margin-bottom: 8px;
+}
+.all-done-msg {
+  font-size: 18px;
+  color: #444;
+}
+
+/* ======== マスタ画面 ======== */
+.master-view { display: none; }
+.master-view.active { display: block; }
+
+.search-area {
+  padding: 16px;
+  background: white;
+}
+.search-box {
+  width: 100%;
+  padding: 16px 20px 16px 50px;
+  border: 2px solid #ddd;
+  border-radius: 12px;
+  font-size: 18px;
+  font-family: inherit;
+  background: white url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="%23999" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>') no-repeat 16px center;
+  background-size: 22px;
+}
+.search-box:focus {
+  outline: none;
+  border-color: #1a5fb4;
+}
+
+.filter-row {
+  display: flex;
+  gap: 8px;
+  padding: 0 16px 16px;
+  overflow-x: auto;
+  background: white;
+  border-bottom: 2px solid #e5e5e5;
+}
+.filter-row::-webkit-scrollbar { display: none; }
+.filter-btn {
+  background: #f5f5f5;
+  border: 2px solid transparent;
+  padding: 10px 18px;
+  border-radius: 24px;
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 700;
+  color: #444;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.filter-btn.active {
+  background: #1a5fb4;
+  color: white;
+}
+
+.shop-list-master {
+  padding: 16px;
+}
+.shop-count {
+  font-size: 16px;
+  color: #666;
+  margin-bottom: 12px;
+  font-weight: 600;
+}
+.shop-card-master {
+  background: white;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 10px;
+  display: grid;
+  grid-template-columns: 56px 1fr auto;
+  gap: 14px;
+  align-items: center;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.shop-card-master:active { background: #f5f5f5; }
+.shop-marker {
+  width: 56px;
+  height: 56px;
+  background: #fff8e1;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  font-size: 28px;
+  flex-shrink: 0;
+}
+.shop-info { min-width: 0; }
+.shop-name-master {
+  font-size: 19px;
+  font-weight: 700;
+  margin-bottom: 4px;
+  line-height: 1.3;
+}
+.shop-addr-master {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 8px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.shop-tags-master {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.shop-tag-master {
+  font-size: 13px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 6px;
+  background: #e3f2fd;
+  color: #1a5fb4;
+}
+.shop-arrow {
+  font-size: 28px;
+  color: #999;
+  font-weight: 300;
+}
+
+/* FAB */
+.fab {
+  position: fixed;
+  bottom: calc(110px + env(safe-area-inset-bottom));
+  right: 20px;
+  width: 72px;
+  height: 72px;
+  background: #1a5fb4;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  font-size: 36px;
+  font-weight: 300;
+  cursor: pointer;
+  box-shadow: 0 6px 16px rgba(26,95,180,0.4);
+  z-index: 80;
+  display: none;
+  place-items: center;
+}
+.fab.show { display: grid; }
+.fab:active { transform: scale(0.95); }
+
+/* ======== 下タブ ======== */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: white;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border-top: 2px solid #e5e5e5;
+  z-index: 90;
+  padding-bottom: env(safe-area-inset-bottom);
+  box-shadow: 0 -4px 12px rgba(0,0,0,0.04);
+}
+.nav-btn {
+  background: none;
+  border: none;
+  padding: 12px 0 10px;
+  cursor: pointer;
+  font-family: inherit;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  color: #666;
+}
+.nav-btn.active {
+  color: #1a5fb4;
+  background: #e3f2fd;
+}
+.nav-icon-big {
+  font-size: 28px;
+}
+.nav-label-big {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+/* ======== モーダル ======== */
+.modal-bg {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 200;
+  display: none;
+  align-items: flex-end;
+  justify-content: center;
+}
+.modal-bg.show { display: flex; }
+.modal {
+  background: white;
+  width: 100%;
+  max-width: 540px;
+  max-height: 94vh;
+  border-radius: 20px 20px 0 0;
+  overflow-y: auto;
+}
+.modal-head {
+  padding: 20px;
+  border-bottom: 2px solid #e5e5e5;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  background: white;
+  z-index: 10;
+}
+.modal-title {
+  font-size: 22px;
+  font-weight: 800;
+}
+.modal-close {
+  background: #f5f5f5;
+  border: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 22px;
+  color: #111;
+  font-family: inherit;
+}
+
+.fs {
+  padding: 20px;
+  border-bottom: 8px solid #f5f5f5;
+}
+.fs:last-of-type { border-bottom: none; }
+.fs-heading {
+  font-size: 16px;
+  font-weight: 800;
+  color: #1a5fb4;
+  margin-bottom: 14px;
+}
+
+.fg { margin-bottom: 16px; }
+.fg:last-child { margin-bottom: 0; }
+.fg-label {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  display: block;
+  color: #111;
+}
+.fg-label .req { color: #d32f2f; margin-left: 4px; }
+.fg-input, .fg-textarea {
+  width: 100%;
+  padding: 14px 16px;
+  border: 2px solid #ddd;
+  border-radius: 10px;
+  font-size: 18px;
+  font-family: inherit;
+  background: white;
+}
+.fg-input:focus, .fg-textarea:focus {
+  outline: none;
+  border-color: #1a5fb4;
+}
+.fg-textarea {
+  resize: vertical;
+  min-height: 80px;
+  line-height: 1.5;
+}
+.fg-hint {
+  font-size: 13px;
+  color: #666;
+  margin-top: 6px;
+}
+
+.place-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.place-opt {
+  border: 2px solid #ddd;
+  background: white;
+  padding: 16px 10px;
+  text-align: center;
+  cursor: pointer;
+  border-radius: 12px;
+}
+.place-opt.on {
+  border-color: #1a5fb4;
+  background: #e3f2fd;
+}
+.place-opt-icon {
+  font-size: 32px;
+  margin-bottom: 6px;
+  display: block;
+}
+.place-opt-label {
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.3;
+  color: #111;
+}
+
+.day-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+}
+.day-btn {
+  aspect-ratio: 1;
+  border: 2px solid #ddd;
+  background: white;
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 18px;
+  font-weight: 800;
+  cursor: pointer;
+  color: #111;
+}
+.day-btn.on {
+  background: #1a5fb4;
+  color: white;
+  border-color: #1a5fb4;
+}
+
+.modal-foot {
+  position: sticky;
+  bottom: 0;
+  background: white;
+  padding: 16px 20px calc(16px + env(safe-area-inset-bottom));
+  border-top: 2px solid #e5e5e5;
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 10px;
+}
+.btn-cancel, .btn-save {
+  padding: 18px;
+  border-radius: 12px;
+  border: none;
+  font-family: inherit;
+  font-size: 18px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.btn-cancel {
+  background: #f5f5f5;
+  color: #111;
+  border: 2px solid #ddd;
+}
+.btn-save {
+  background: #1a5fb4;
+  color: white;
+}
+.btn-delete {
+  display: block;
+  width: calc(100% - 40px);
+  margin: 0 20px 16px;
+  padding: 16px;
+  background: white;
+  color: #d32f2f;
+  border: 2px solid #d32f2f;
+  border-radius: 12px;
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* ======== トースト ======== */
+.toast {
+  position: fixed;
+  bottom: calc(120px + env(safe-area-inset-bottom));
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: #2e7d32;
+  color: white;
+  padding: 16px 24px;
+  border-radius: 12px;
+  font-size: 18px;
+  font-weight: 700;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s, transform 0.3s;
+  z-index: 300;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* 同期バー */
+.sync-bar {
+  background: #e8f5e9;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 2px solid #c8e6c9;
+}
+.sync-dot {
+  width: 12px;
+  height: 12px;
+  background: #2e7d32;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.sync-text {
+  flex: 1;
+  font-size: 15px;
+  color: #1b5e20;
+  font-weight: 700;
+}
+.sync-btn-small {
+  background: white;
+  border: 2px solid #2e7d32;
+  color: #1b5e20;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+</style>
+</head>
+<body>
+
+<!-- ヘッダー -->
+<div class="header">
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;">
+    <a href="index.html" style="color:white;text-decoration:none;font-size:22px;background:rgba(255,255,255,0.2);width:36px;height:36px;border-radius:50%;display:grid;place-items:center;">←</a>
+    <div class="header-title" style="margin:0;">🚚 今日の配送</div>
+  </div>
+  <div class="header-date" id="dateText">2026年4月17日（金）</div>
+  <div class="progress-row">
+    <div class="progress-text"><span class="done-num" id="doneNum">3</span> / <span id="totalNum">12</span></div>
+    <div class="progress-bar">
+      <div class="progress-fill" id="progressFill"></div>
+    </div>
+  </div>
+</div>
+
+<!-- タブ -->
+<div class="tabs">
+  <button class="tab active" data-view="route">📋 今日の配送</button>
+  <button class="tab" data-view="master">🏪 店舗リスト</button>
+</div>
+
+<!-- ルート画面 -->
+<div class="route-view" id="routeView">
+  <div class="next-section">
+    <div class="next-label">▼ 次はここへ</div>
+    <div id="nextCardContainer"></div>
+  </div>
+  <div class="all-list">
+    <div class="list-title">本日の配送先</div>
+    <div class="list-hint">≡ を長押しで順番を変えられます</div>
+    <div id="stopList"></div>
+  </div>
+</div>
+
+<!-- マスタ画面 -->
+<div class="master-view" id="masterView">
+  <div class="search-area">
+    <input type="text" class="search-box" id="searchInput" placeholder="店舗名で検索">
+  </div>
+  <div class="sync-bar">
+    <div class="sync-dot"></div>
+    <div class="sync-text">Google スプレッドシートと連動中</div>
+    <button class="sync-btn-small" onclick="syncNow()">更新</button>
+  </div>
+  <div class="filter-row">
+    <button class="filter-btn active" data-filter="all">すべて</button>
+    <button class="filter-btn" data-filter="名古屋">名古屋市</button>
+    <button class="filter-btn" data-filter="豊田">豊田市</button>
+    <button class="filter-btn" data-filter="岡崎">岡崎市</button>
+    <button class="filter-btn" data-filter="その他">その他</button>
+  </div>
+  <div class="shop-list-master">
+    <div class="shop-count" id="shopCount">10件</div>
+    <div id="shopListMaster"></div>
+  </div>
+</div>
+
+<!-- 追加ボタン -->
+<button class="fab" id="fab" onclick="openAddModal()">+</button>
+
+<!-- 下タブ -->
+<div class="bottom-nav">
+  <button class="nav-btn active" data-nav="route">
+    <span class="nav-icon-big">📋</span>
+    <span class="nav-label-big">今日の配送</span>
+  </button>
+  <button class="nav-btn" data-nav="master">
+    <span class="nav-icon-big">🏪</span>
+    <span class="nav-label-big">店舗リスト</span>
+  </button>
+</div>
+
+<!-- モーダル -->
+<div class="modal-bg" id="modal">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title" id="modalTitle">配送先を追加</div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+
+    <div class="fs">
+      <div class="fs-heading">📝 お店の情報</div>
+      <div class="fg">
+        <label class="fg-label">お店の名前<span class="req">*</span></label>
+        <input type="text" class="fg-input" id="f_name" placeholder="例：居酒屋まるきん 栄店">
+      </div>
+      <div class="fg">
+        <label class="fg-label">住所<span class="req">*</span></label>
+        <input type="text" class="fg-input" id="f_address" placeholder="例：名古屋市中区栄3-15-8">
+      </div>
+      <div class="fg">
+        <label class="fg-label">電話番号</label>
+        <input type="tel" class="fg-input" id="f_tel" placeholder="052-XXX-XXXX">
+      </div>
+      <div class="fg">
+        <label class="fg-label">担当の方のお名前</label>
+        <input type="text" class="fg-input" id="f_contact" placeholder="例：田中店長">
+      </div>
+    </div>
+
+    <div class="fs">
+      <div class="fs-heading">📦 納品について</div>
+      <div class="fg">
+        <label class="fg-label">どこに置きますか？<span class="req">*</span></label>
+        <div class="place-grid" id="placeGrid">
+          <div class="place-opt" data-place="entrance"><span class="place-opt-icon">🚪</span><div class="place-opt-label">お店の入口</div></div>
+          <div class="place-opt" data-place="back"><span class="place-opt-icon">🚛</span><div class="place-opt-label">裏口・搬入口</div></div>
+          <div class="place-opt" data-place="staff"><span class="place-opt-icon">🙋</span><div class="place-opt-label">スタッフに手渡し</div></div>
+          <div class="place-opt" data-place="kitchen"><span class="place-opt-icon">👨‍🍳</span><div class="place-opt-label">キッチンまで運ぶ</div></div>
+          <div class="place-opt" data-place="storage"><span class="place-opt-icon">📦</span><div class="place-opt-label">倉庫に置く</div></div>
+          <div class="place-opt" data-place="counter"><span class="place-opt-icon">🧾</span><div class="place-opt-label">レジカウンター</div></div>
+        </div>
+      </div>
+      <div class="fg">
+        <label class="fg-label">気をつけることメモ</label>
+        <textarea class="fg-textarea" id="f_note" placeholder="例：裏のシャッターが開いてます／重いので台車で／インターホン鳴らしてから"></textarea>
+        <div class="fg-hint">配送のときに画面で見ることができます</div>
+      </div>
+    </div>
+
+    <div class="fs">
+      <div class="fs-heading">📅 配送する日</div>
+      <div class="fg">
+        <label class="fg-label">曜日（複数選べます）</label>
+        <div class="day-grid" id="dayGrid">
+          <button class="day-btn" data-day="1">月</button>
+          <button class="day-btn" data-day="2">火</button>
+          <button class="day-btn" data-day="3">水</button>
+          <button class="day-btn" data-day="4">木</button>
+          <button class="day-btn" data-day="5">金</button>
+          <button class="day-btn" data-day="6">土</button>
+          <button class="day-btn" data-day="0">日</button>
+        </div>
+      </div>
+      <div class="fg">
+        <label class="fg-label">希望の時間帯</label>
+        <input type="text" class="fg-input" id="f_time" placeholder="例：11:00〜13:00">
+      </div>
+      <div class="fg">
+        <label class="fg-label">いつもの商品</label>
+        <textarea class="fg-textarea" id="f_items" placeholder="例：お米20kg、醤油、割り箸"></textarea>
+      </div>
+    </div>
+
+    <button class="btn-delete" id="deleteBtn" onclick="deleteShop()" style="display:none">このお店を削除</button>
+
+    <div class="modal-foot">
+      <button class="btn-cancel" onclick="closeModal()">やめる</button>
+      <button class="btn-save" onclick="saveShop()">保存する</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"><span id="toastText"></span></div>
+
+<script>
+const PLACES = {
+  entrance: { icon: "🚪", label: "お店の入口に置く", short: "入口" },
+  back:     { icon: "🚛", label: "裏口・搬入口に置く", short: "裏口" },
+  staff:    { icon: "🙋", label: "スタッフに手渡し", short: "手渡し" },
+  kitchen:  { icon: "👨‍🍳", label: "キッチンまで運ぶ", short: "キッチン" },
+  storage:  { icon: "📦", label: "倉庫に置く", short: "倉庫" },
+  counter:  { icon: "🧾", label: "レジカウンター", short: "レジ" },
+};
+
+let shops = [
+  { id: 1, name: "焼肉大将軍 名駅店", address: "名古屋市中村区名駅4-5-2", tel: "052-111-1111", contact: "山田店長", place: "back", note: "裏のシャッター開いてます", days: [1,2,3,4,5], time: "10:00〜11:00", items: "割り箸、おしぼり" },
+  { id: 2, name: "ラーメン一番星", address: "名古屋市中村区椿町1-3", tel: "052-222-2222", contact: "佐藤オーナー", place: "kitchen", note: "冷蔵庫横まで運んでください", days: [1,3,5], time: "9:00〜10:30", items: "麺、スープ原液" },
+  { id: 3, name: "カフェ ベル", address: "名古屋市中区錦2-10-5", tel: "052-333-3333", contact: "", place: "counter", note: "", days: [2,4,6], time: "9:00〜11:00", items: "コーヒー豆、紙コップ" },
+  { id: 4, name: "居酒屋まるきん 栄店", address: "名古屋市中区栄3-15-8 サンプルビル1F", tel: "052-444-4444", contact: "鈴木店長", place: "staff", note: "開店前なのでインターホンを鳴らしてください", days: [1,2,3,4,5,6], time: "11:00〜13:00", items: "お米20kg、油" },
+  { id: 5, name: "寿司処 江戸", address: "名古屋市中区大須2-8-1", tel: "052-555-5555", contact: "", place: "entrance", note: "", days: [2,5], time: "10:00〜12:00", items: "割り箸、醤油" },
+  { id: 6, name: "焼き鳥 鳥政", address: "名古屋市中区新栄1-5-3", tel: "052-666-6666", contact: "高橋店長", place: "back", note: "重いので台車を使ってください", days: [1,4], time: "13:00〜15:00", items: "備長炭、タレ" },
+  { id: 7, name: "中華料理 龍門", address: "名古屋市東区東桜1-12-4", tel: "052-777-7777", contact: "", place: "kitchen", note: "", days: [1,2,3,4,5], time: "13:00〜15:00", items: "油、調味料一式" },
+  { id: 8, name: "和食 さくら", address: "名古屋市東区葵3-2-1", tel: "052-888-8888", contact: "伊藤女将", place: "storage", note: "2階の倉庫へ", days: [1,3,5], time: "14:00〜16:00", items: "お米30kg、味噌" },
+  { id: 9, name: "とんかつ たなか 豊田店", address: "豊田市若宮町1-52", tel: "0565-11-1111", contact: "田中社長", place: "staff", note: "", days: [2,4,6], time: "14:00〜16:00", items: "パン粉、キャベツ" },
+  { id: 10, name: "居酒屋 ほろ酔い 岡崎店", address: "岡崎市康生通南2-25", tel: "0564-22-2222", contact: "", place: "entrance", note: "", days: [1,2,3,4,5,6], time: "16:00〜18:00", items: "お米、割り箸、油" },
+];
+
+let route = [
+  { shopId: 1, time: "9:00", done: true },
+  { shopId: 2, time: "9:40", done: true },
+  { shopId: 3, time: "10:20", done: true },
+  { shopId: 4, time: "11:30", done: false },
+  { shopId: 5, time: "12:15", done: false },
+  { shopId: 6, time: "13:00", done: false },
+  { shopId: 7, time: "13:45", done: false },
+  { shopId: 8, time: "14:20", done: false },
+  { shopId: 9, time: "15:30", done: false },
+  { shopId: 10, time: "17:00", done: false },
+];
+
+let currentView = "route";
+let currentFilter = "all";
+let currentSearch = "";
+let editingId = null;
+let selectedPlace = null;
+let selectedDays = [];
+
+function getShop(id) { return shops.find(s => s.id === id); }
+
+function renderHeader() {
+  const done = route.filter(r => r.done).length;
+  const total = route.length;
+  const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+  document.getElementById("doneNum").textContent = done;
+  document.getElementById("totalNum").textContent = total;
+  document.getElementById("progressFill").style.width = pct + "%";
+}
+
+function renderNext() {
+  const idx = route.findIndex(r => !r.done);
+  const c = document.getElementById("nextCardContainer");
+  if (idx === -1) {
+    c.innerHTML = `
+      <div class="all-done">
+        <div class="all-done-icon">🎉</div>
+        <div class="all-done-title">すべて完了しました！</div>
+        <div class="all-done-msg">本日もお疲れさまでした</div>
+      </div>`;
+    document.querySelector('.next-label').style.display = 'none';
+    return;
+  }
+  document.querySelector('.next-label').style.display = 'block';
+  const r = route[idx];
+  const s = getShop(r.shopId);
+  if (!s) return;
+  const place = PLACES[s.place] || PLACES.entrance;
+  c.innerHTML = `
+    <div class="next-card">
+      <div class="next-top">
+        <div class="next-num">${idx+1}</div>
+        <div>
+          <div class="next-of"><span class="next-of-num">${idx+1}</span> / ${route.length} 件目</div>
+          <div style="font-size:15px;opacity:.9;">目安 ${r.time} 頃</div>
+        </div>
+      </div>
+      <div class="next-body">
+        <div class="next-name">${s.name}</div>
+        <div class="next-address">📍 ${s.address}</div>
+
+        <div class="delivery-box">
+          <div class="delivery-label">納品する場所</div>
+          <div class="delivery-main">
+            <div class="delivery-icon">${place.icon}</div>
+            <div class="delivery-where">${place.label}</div>
+          </div>
+          ${s.note ? `<div class="delivery-note">${s.note}</div>` : ''}
+        </div>
+
+        <div class="info-row">
+          <div class="info-item">
+            <div class="info-item-label">商品</div>
+            <div class="info-item-value">${s.items || '—'}</div>
+          </div>
+        </div>
+
+        <div class="btn-row">
+          <button class="big-btn btn-nav" onclick="openNav()">
+            <span class="btn-icon">🗺️</span>地図で道案内
+          </button>
+          <button class="big-btn btn-done" onclick="markDone()">
+            <span class="btn-icon">✓</span>配送が終わりました
+          </button>
+        </div>
+        ${s.tel ? `<button class="btn-call" onclick="callShop()">📞 お店に電話する (${s.tel})</button>` : ''}
+      </div>
+    </div>`;
+}
+
+function renderRouteList() {
+  const listEl = document.getElementById("stopList");
+  listEl.innerHTML = route.map((r, i) => {
+    const s = getShop(r.shopId);
+    if (!s) return '';
+    const place = PLACES[s.place] || PLACES.entrance;
+    return `
+      <div class="list-card ${r.done ? 'done' : ''}" data-index="${i}" draggable="${!r.done}">
+        <div class="list-handle" data-drag="true">≡</div>
+        <div class="list-num"><span class="num-text">${i+1}</span></div>
+        <div class="list-body" onclick="toggleDone(${i})">
+          <div class="list-name">${s.name}</div>
+          <div class="list-meta">
+            <span class="list-place">${place.icon} ${place.short}</span>
+            <span class="list-time">⏰ ${r.time}</span>
+          </div>
+        </div>
+      </div>`;
+  }).join("");
+  attachDragHandlers();
+}
+
+function renderRoute() {
+  renderHeader();
+  renderNext();
+  renderRouteList();
+}
+
+function renderMaster() {
+  const filtered = shops.filter(s => {
+    if (currentFilter === "all") return matchSearch(s);
+    if (currentFilter === "その他") return !["名古屋","豊田","岡崎"].some(a => s.address.includes(a)) && matchSearch(s);
+    return s.address.includes(currentFilter) && matchSearch(s);
+  });
+  document.getElementById("shopCount").textContent = `${filtered.length}件`;
+  const listEl = document.getElementById("shopListMaster");
+  if (filtered.length === 0) {
+    listEl.innerHTML = `<div style="text-align:center;padding:40px 20px;color:#666;font-size:18px;">該当するお店がありません</div>`;
+    return;
+  }
+  const dayLabels = ["日","月","火","水","木","金","土"];
+  listEl.innerHTML = filtered.map(s => {
+    const place = PLACES[s.place] || PLACES.entrance;
+    const daysText = s.days.length === 7 ? "毎日" : s.days.length === 0 ? "—" : s.days.slice().sort().map(d => dayLabels[d]).join("・");
+    return `
+      <div class="shop-card-master" onclick="openEditModal(${s.id})">
+        <div class="shop-marker">${place.icon}</div>
+        <div class="shop-info">
+          <div class="shop-name-master">${s.name}</div>
+          <div class="shop-addr-master">📍 ${s.address}</div>
+          <div class="shop-tags-master">
+            <span class="shop-tag-master">${place.short}</span>
+            <span class="shop-tag-master">${daysText}</span>
+          </div>
+        </div>
+        <div class="shop-arrow">›</div>
+      </div>`;
+  }).join("");
+}
+
+function matchSearch(s) {
+  if (!currentSearch) return true;
+  const q = currentSearch.toLowerCase();
+  return s.name.toLowerCase().includes(q) || s.address.toLowerCase().includes(q);
+}
+
+function switchView(v) {
+  currentView = v;
+  document.getElementById("routeView").style.display = v === "route" ? "block" : "none";
+  document.getElementById("masterView").style.display = v === "master" ? "block" : "none";
+  document.getElementById("fab").classList.toggle("show", v === "master");
+  document.querySelectorAll(".tab").forEach(t => t.classList.toggle("active", t.dataset.view === v));
+  document.querySelectorAll(".nav-btn").forEach(n => n.classList.toggle("active", n.dataset.nav === v));
+  if (v === "master") renderMaster();
+  else renderRoute();
+}
+
+document.querySelectorAll(".tab").forEach(t => {
+  t.addEventListener("click", () => switchView(t.dataset.view));
+});
+document.querySelectorAll(".nav-btn").forEach(n => {
+  n.addEventListener("click", () => switchView(n.dataset.nav));
+});
+
+document.getElementById("searchInput").addEventListener("input", e => {
+  currentSearch = e.target.value;
+  renderMaster();
+});
+document.querySelectorAll(".filter-btn").forEach(p => {
+  p.addEventListener("click", () => {
+    document.querySelectorAll(".filter-btn").forEach(x => x.classList.remove("active"));
+    p.classList.add("active");
+    currentFilter = p.dataset.filter;
+    renderMaster();
+  });
+});
+
+function openNav() {
+  const idx = route.findIndex(r => !r.done);
+  if (idx === -1) return;
+  const s = getShop(route[idx].shopId);
+  alert(`🗺️ 地図で道案内を開きます\n\n${s.name}\n${s.address}`);
+}
+function markDone() {
+  const idx = route.findIndex(r => !r.done);
+  if (idx === -1) return;
+  if (!confirm(`「${getShop(route[idx].shopId).name}」の配送が\n完了しましたか？`)) return;
+  route[idx].done = true;
+  showToast("✓ 配送完了しました");
+  renderRoute();
+}
+function toggleDone(i) {
+  if (route[i].done) {
+    if (confirm(`「${getShop(route[i].shopId).name}」の完了を\n取り消しますか？`)) {
+      route[i].done = false;
+      renderRoute();
+    }
+  }
+}
+function callShop() {
+  const idx = route.findIndex(r => !r.done);
+  if (idx === -1) return;
+  const s = getShop(route[idx].shopId);
+  alert(`📞 ${s.tel} に電話します\n${s.name}`);
+}
+
+function openAddModal() {
+  editingId = null;
+  document.getElementById("modalTitle").textContent = "お店を追加";
+  document.getElementById("deleteBtn").style.display = "none";
+  clearForm();
+  document.getElementById("modal").classList.add("show");
+}
+function openEditModal(id) {
+  const s = getShop(id);
+  if (!s) return;
+  editingId = id;
+  document.getElementById("modalTitle").textContent = "お店の情報を編集";
+  document.getElementById("deleteBtn").style.display = "block";
+  document.getElementById("f_name").value = s.name;
+  document.getElementById("f_address").value = s.address;
+  document.getElementById("f_tel").value = s.tel || "";
+  document.getElementById("f_contact").value = s.contact || "";
+  document.getElementById("f_note").value = s.note || "";
+  document.getElementById("f_time").value = s.time || "";
+  document.getElementById("f_items").value = s.items || "";
+  selectedPlace = s.place;
+  selectedDays = [...(s.days || [])];
+  updateFormVisuals();
+  document.getElementById("modal").classList.add("show");
+}
+function clearForm() {
+  ["f_name","f_address","f_tel","f_contact","f_note","f_time","f_items"].forEach(id => {
+    document.getElementById(id).value = "";
+  });
+  selectedPlace = null;
+  selectedDays = [];
+  updateFormVisuals();
+}
+function updateFormVisuals() {
+  document.querySelectorAll(".place-opt").forEach(el => {
+    el.classList.toggle("on", el.dataset.place === selectedPlace);
+  });
+  document.querySelectorAll(".day-btn").forEach(el => {
+    el.classList.toggle("on", selectedDays.includes(parseInt(el.dataset.day)));
+  });
+}
+document.querySelectorAll(".place-opt").forEach(el => {
+  el.addEventListener("click", () => {
+    selectedPlace = el.dataset.place;
+    updateFormVisuals();
+  });
+});
+document.querySelectorAll(".day-btn").forEach(el => {
+  el.addEventListener("click", () => {
+    const d = parseInt(el.dataset.day);
+    if (selectedDays.includes(d)) selectedDays = selectedDays.filter(x => x !== d);
+    else selectedDays.push(d);
+    updateFormVisuals();
+  });
+});
+function closeModal() {
+  document.getElementById("modal").classList.remove("show");
+}
+function saveShop() {
+  const name = document.getElementById("f_name").value.trim();
+  const address = document.getElementById("f_address").value.trim();
+  if (!name || !address) return alert("お店の名前と住所を入力してください");
+  if (!selectedPlace) return alert("納品する場所を選んでください");
+  const data = {
+    name, address,
+    tel: document.getElementById("f_tel").value.trim(),
+    contact: document.getElementById("f_contact").value.trim(),
+    place: selectedPlace,
+    note: document.getElementById("f_note").value.trim(),
+    days: [...selectedDays],
+    time: document.getElementById("f_time").value.trim(),
+    items: document.getElementById("f_items").value.trim(),
+  };
+  if (editingId === null) {
+    data.id = Math.max(0, ...shops.map(s => s.id)) + 1;
+    shops.unshift(data);
+    showToast(`「${name}」を追加しました`);
+  } else {
+    const idx = shops.findIndex(s => s.id === editingId);
+    shops[idx] = { ...shops[idx], ...data };
+    showToast(`「${name}」を更新しました`);
+  }
+  closeModal();
+  renderMaster();
+  renderRoute();
+}
+function deleteShop() {
+  if (editingId === null) return;
+  const s = getShop(editingId);
+  if (!confirm(`「${s.name}」を削除しますか？\n元に戻せません。`)) return;
+  shops = shops.filter(x => x.id !== editingId);
+  closeModal();
+  showToast(`削除しました`);
+  renderMaster();
+}
+function syncNow() {
+  showToast("✓ 最新の情報に更新しました");
+}
+
+function showToast(msg) {
+  const t = document.getElementById("toast");
+  document.getElementById("toastText").textContent = msg;
+  t.classList.add("show");
+  setTimeout(() => t.classList.remove("show"), 2200);
+}
+
+// ドラッグ＆ドロップ
+let dragSrcIndex = null;
+let touchDragging = false;
+let touchStartY = 0;
+
+function attachDragHandlers() {
+  document.querySelectorAll("#stopList .list-card").forEach(card => {
+    card.addEventListener("dragstart", handleDragStart);
+    card.addEventListener("dragover", handleDragOver);
+    card.addEventListener("drop", handleDrop);
+    card.addEventListener("dragend", handleDragEnd);
+    card.addEventListener("dragleave", handleDragLeave);
+    const handle = card.querySelector(".list-handle");
+    if (handle) {
+      handle.addEventListener("touchstart", handleTouchStart, { passive: false });
+      handle.addEventListener("touchmove", handleTouchMove, { passive: false });
+      handle.addEventListener("touchend", handleTouchEnd);
+    }
+  });
+}
+function handleDragStart(e) {
+  if (this.classList.contains("done")) return e.preventDefault();
+  dragSrcIndex = parseInt(this.dataset.index);
+  this.classList.add("dragging");
+  e.dataTransfer.effectAllowed = "move";
+}
+function handleDragOver(e) {
+  e.preventDefault();
+  document.querySelectorAll("#stopList .list-card").forEach(c => c.classList.remove("drag-over"));
+  this.classList.add("drag-over");
+}
+function handleDragLeave() { this.classList.remove("drag-over"); }
+function handleDrop(e) {
+  e.stopPropagation();
+  e.preventDefault();
+  const dst = parseInt(this.dataset.index);
+  if (dragSrcIndex !== null && dragSrcIndex !== dst) reorderRoute(dragSrcIndex, dst);
+}
+function handleDragEnd() {
+  document.querySelectorAll("#stopList .list-card").forEach(c => {
+    c.classList.remove("dragging");
+    c.classList.remove("drag-over");
+  });
+  dragSrcIndex = null;
+}
+function handleTouchStart(e) {
+  const card = e.currentTarget.closest(".list-card");
+  if (card.classList.contains("done")) return;
+  e.preventDefault();
+  touchDragging = true;
+  dragSrcIndex = parseInt(card.dataset.index);
+  touchStartY = e.touches[0].clientY;
+  card.classList.add("dragging");
+  if (navigator.vibrate) navigator.vibrate(30);
+}
+function handleTouchMove(e) {
+  if (!touchDragging) return;
+  e.preventDefault();
+  const y = e.touches[0].clientY;
+  const el = document.elementFromPoint(e.touches[0].clientX, y);
+  const target = el?.closest(".list-card");
+  document.querySelectorAll("#stopList .list-card").forEach(c => c.classList.remove("drag-over"));
+  if (target && parseInt(target.dataset.index) !== dragSrcIndex && !target.classList.contains("done")) {
+    target.classList.add("drag-over");
+  }
+  const draggingCard = document.querySelector(".list-card.dragging");
+  if (draggingCard) {
+    const dy = y - touchStartY;
+    draggingCard.style.transform = `translateY(${dy}px) scale(1.02)`;
+  }
+}
+function handleTouchEnd() {
+  if (!touchDragging) return;
+  touchDragging = false;
+  const target = document.querySelector(".list-card.drag-over");
+  const draggingCard = document.querySelector(".list-card.dragging");
+  if (draggingCard) {
+    draggingCard.style.transform = "";
+    draggingCard.classList.remove("dragging");
+  }
+  if (target && dragSrcIndex !== null) {
+    const dst = parseInt(target.dataset.index);
+    if (dst !== dragSrcIndex) reorderRoute(dragSrcIndex, dst);
+  }
+  document.querySelectorAll("#stopList .list-card").forEach(c => c.classList.remove("drag-over"));
+  dragSrcIndex = null;
+}
+function reorderRoute(from, to) {
+  const moved = route[from];
+  const s = getShop(moved.shopId);
+  route.splice(from, 1);
+  route.splice(to, 0, moved);
+  showToast(`「${s.name}」を${to+1}番目に移動しました`);
+  renderRoute();
+}
+
+renderRoute();
+</script>
+
+</body>
+</html>

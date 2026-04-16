@@ -1,0 +1,1228 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+<title>配送アプリ - 日本ユーア東海</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic", sans-serif;
+  background: #f5f5f5;
+  color: #111;
+  padding-bottom: calc(90px + env(safe-area-inset-bottom));
+  -webkit-font-smoothing: antialiased;
+  font-size: 18px;
+  line-height: 1.5;
+}
+
+/* ======== ヘッダー ======== */
+.header {
+  background: #1a5fb4;
+  color: white;
+  padding: 20px;
+  position: relative;
+}
+.header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 4px;
+}
+.header-title {
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+.header-date {
+  font-size: 16px;
+  opacity: 0.9;
+  margin-bottom: 16px;
+}
+.header-import-btn {
+  background: white;
+  color: #1a5fb4;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 800;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+}
+.progress-row {
+  background: white;
+  border-radius: 12px;
+  padding: 16px 20px;
+  color: #111;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.progress-text {
+  font-size: 20px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.progress-text .done-num {
+  font-size: 32px;
+  color: #1a5fb4;
+}
+.progress-bar {
+  flex: 1;
+  height: 14px;
+  background: #e5e5e5;
+  border-radius: 7px;
+  overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  background: #2e7d32;
+  border-radius: 7px;
+  transition: width 0.4s ease;
+}
+
+/* ======== タブ ======== */
+.tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  background: white;
+  border-bottom: 2px solid #e5e5e5;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+.tab {
+  padding: 18px;
+  background: none;
+  border: none;
+  font-family: inherit;
+  font-size: 18px;
+  font-weight: 700;
+  color: #666;
+  cursor: pointer;
+  position: relative;
+}
+.tab.active { color: #1a5fb4; }
+.tab.active::after {
+  content: '';
+  position: absolute;
+  bottom: -2px; left: 0; right: 0;
+  height: 4px;
+  background: #1a5fb4;
+}
+
+/* ======== ルート画面 ======== */
+.route-view { display: block; }
+.route-view.hidden { display: none; }
+
+.empty-state {
+  text-align: center;
+  padding: 60px 20px 40px;
+}
+.empty-icon {
+  font-size: 72px;
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+.empty-title {
+  font-size: 22px;
+  font-weight: 800;
+  color: #666;
+  margin-bottom: 8px;
+}
+.empty-msg {
+  font-size: 16px;
+  color: #888;
+  margin-bottom: 24px;
+  line-height: 1.6;
+}
+.empty-import-btn {
+  background: #1a5fb4;
+  color: white;
+  border: none;
+  padding: 18px 32px;
+  border-radius: 14px;
+  font-family: inherit;
+  font-size: 18px;
+  font-weight: 800;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 4px 12px rgba(26,95,180,0.3);
+}
+
+.next-section { padding: 20px 16px 0; }
+.next-label {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1a5fb4;
+  margin-bottom: 10px;
+  padding-left: 4px;
+}
+.next-card {
+  background: white;
+  border-radius: 16px;
+  border: 3px solid #1a5fb4;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+.next-top {
+  background: #1a5fb4;
+  color: white;
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.next-num {
+  background: white;
+  color: #1a5fb4;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 28px;
+  font-weight: 900;
+}
+.next-of { font-size: 16px; opacity: 0.9; }
+.next-of-num { font-size: 20px; font-weight: 700; }
+
+.next-body { padding: 20px; }
+.next-name {
+  font-size: 26px;
+  font-weight: 800;
+  line-height: 1.3;
+  margin-bottom: 10px;
+}
+.next-address {
+  font-size: 17px;
+  color: #444;
+  line-height: 1.5;
+  margin-bottom: 16px;
+}
+
+.delivery-box {
+  background: #fff8e1;
+  border: 2px solid #ffa000;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+.delivery-label {
+  font-size: 14px;
+  font-weight: 700;
+  color: #ef6c00;
+  margin-bottom: 6px;
+}
+.delivery-main {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.delivery-icon { font-size: 40px; line-height: 1; }
+.delivery-where {
+  font-size: 22px;
+  font-weight: 800;
+  line-height: 1.3;
+}
+.delivery-note {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed #ffa000;
+  font-size: 17px;
+  line-height: 1.5;
+}
+.delivery-note::before { content: '💡 '; }
+
+.info-row {
+  margin-bottom: 20px;
+}
+.info-item {
+  background: #f5f5f5;
+  padding: 12px 14px;
+  border-radius: 10px;
+}
+.info-item-label {
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 4px;
+  font-weight: 600;
+}
+.info-item-value {
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.btn-row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+.big-btn {
+  padding: 22px;
+  border: none;
+  border-radius: 14px;
+  font-family: inherit;
+  font-size: 22px;
+  font-weight: 800;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  transition: transform 0.1s;
+}
+.big-btn:active { transform: scale(0.97); }
+.btn-nav { background: #1a5fb4; color: white; }
+.btn-done { background: #2e7d32; color: white; }
+.btn-icon { font-size: 28px; }
+
+.btn-call {
+  background: white;
+  color: #1a5fb4;
+  border: 2px solid #1a5fb4;
+  padding: 16px;
+  margin-top: 10px;
+  border-radius: 12px;
+  font-family: inherit;
+  font-size: 18px;
+  font-weight: 700;
+  width: 100%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.all-list { padding: 24px 16px 0; }
+.list-title { font-size: 20px; font-weight: 800; margin-bottom: 6px; }
+.list-hint { font-size: 14px; color: #666; margin-bottom: 14px; }
+
+.list-card {
+  background: white;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 10px;
+  display: grid;
+  grid-template-columns: 40px 56px 1fr;
+  gap: 14px;
+  align-items: center;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  transition: opacity 0.3s, background 0.3s;
+}
+.list-card.done { background: #e8f5e9; opacity: 0.7; }
+.list-card.done .list-name { text-decoration: line-through; color: #666; }
+.list-card.dragging {
+  opacity: 0.9;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+  transform: scale(1.02);
+  z-index: 10;
+  position: relative;
+}
+.list-card.drag-over { border-top: 4px solid #1a5fb4; }
+.list-handle {
+  font-size: 32px;
+  color: #999;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  text-align: center;
+}
+.list-handle:active { cursor: grabbing; }
+.list-card.done .list-handle { visibility: hidden; }
+.list-num {
+  width: 56px; height: 56px;
+  border-radius: 50%;
+  background: #e3f2fd;
+  color: #1a5fb4;
+  display: grid;
+  place-items: center;
+  font-size: 24px;
+  font-weight: 800;
+}
+.list-card.done .list-num { background: #2e7d32; color: white; }
+.list-card.done .list-num::after { content: '✓'; font-size: 32px; }
+.list-card.done .list-num .num-text { display: none; }
+.list-name { font-size: 19px; font-weight: 700; margin-bottom: 6px; line-height: 1.3; }
+.list-meta { display: flex; gap: 10px; flex-wrap: wrap; }
+.list-place {
+  background: #fff8e1;
+  color: #ef6c00;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 15px;
+  font-weight: 700;
+}
+.list-time { font-size: 16px; font-weight: 700; color: #1a5fb4; }
+
+.all-done {
+  text-align: center;
+  padding: 60px 20px;
+  background: white;
+  border-radius: 16px;
+  margin: 20px 16px 0;
+}
+.all-done-icon { font-size: 80px; margin-bottom: 16px; }
+.all-done-title {
+  font-size: 26px;
+  font-weight: 800;
+  color: #2e7d32;
+  margin-bottom: 8px;
+}
+.all-done-msg { font-size: 18px; color: #444; }
+
+/* ======== マスタ画面（省略版でも動くように） ======== */
+.master-view { display: none; padding: 20px 16px; }
+.master-view.active { display: block; }
+.master-placeholder {
+  background: white;
+  padding: 40px 20px;
+  border-radius: 12px;
+  text-align: center;
+  color: #666;
+}
+
+/* ======== 下タブ ======== */
+.bottom-nav {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  background: white;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border-top: 2px solid #e5e5e5;
+  z-index: 90;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.nav-btn {
+  background: none;
+  border: none;
+  padding: 12px 0 10px;
+  cursor: pointer;
+  font-family: inherit;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  color: #666;
+}
+.nav-btn.active { color: #1a5fb4; background: #e3f2fd; }
+.nav-icon-big { font-size: 28px; }
+.nav-label-big { font-size: 13px; font-weight: 700; }
+
+/* ======== インポートモーダル ======== */
+.modal-bg {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 200;
+  display: none;
+  align-items: flex-end;
+  justify-content: center;
+}
+.modal-bg.show { display: flex; }
+.modal {
+  background: white;
+  width: 100%;
+  max-width: 540px;
+  max-height: 94vh;
+  border-radius: 20px 20px 0 0;
+  overflow-y: auto;
+}
+.modal-head {
+  padding: 20px;
+  border-bottom: 2px solid #e5e5e5;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  background: white;
+  z-index: 10;
+}
+.modal-title { font-size: 22px; font-weight: 800; }
+.modal-close {
+  background: #f5f5f5;
+  border: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  font-size: 22px;
+  font-family: inherit;
+}
+
+.modal-body { padding: 20px; }
+
+/* インポート方法選択 */
+.import-intro {
+  background: #e3f2fd;
+  padding: 16px;
+  border-radius: 12px;
+  margin-bottom: 20px;
+  font-size: 16px;
+  line-height: 1.6;
+  color: #0d47a1;
+}
+.import-intro strong { font-weight: 800; }
+
+.import-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.import-option {
+  background: white;
+  border: 3px solid #e5e5e5;
+  border-radius: 14px;
+  padding: 20px 12px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.import-option:hover { border-color: #1a5fb4; }
+.import-option.selected {
+  border-color: #1a5fb4;
+  background: #e3f2fd;
+}
+.import-option-icon {
+  font-size: 48px;
+  margin-bottom: 8px;
+  display: block;
+  line-height: 1;
+}
+.import-option-title {
+  font-size: 18px;
+  font-weight: 800;
+  margin-bottom: 4px;
+}
+.import-option-desc {
+  font-size: 13px;
+  color: #666;
+  line-height: 1.4;
+}
+
+/* ドロップゾーン */
+.drop-zone {
+  border: 3px dashed #1a5fb4;
+  border-radius: 16px;
+  padding: 40px 20px;
+  text-align: center;
+  background: #f5f9ff;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+  margin-bottom: 20px;
+}
+.drop-zone.drag-over {
+  background: #e3f2fd;
+  border-color: #0d47a1;
+}
+.drop-zone-icon { font-size: 56px; margin-bottom: 10px; }
+.drop-zone-title {
+  font-size: 18px;
+  font-weight: 800;
+  margin-bottom: 6px;
+  color: #1a5fb4;
+}
+.drop-zone-msg {
+  font-size: 14px;
+  color: #666;
+  line-height: 1.5;
+}
+.drop-zone-or {
+  display: block;
+  margin: 14px 0 10px;
+  font-size: 13px;
+  color: #999;
+  font-weight: 700;
+}
+.file-select-btn {
+  background: #1a5fb4;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* CSVサンプル */
+.format-help {
+  background: #f5f5f5;
+  border-radius: 10px;
+  padding: 14px;
+  font-size: 13px;
+  color: #444;
+  line-height: 1.6;
+}
+.format-help-title {
+  font-weight: 800;
+  margin-bottom: 6px;
+  color: #111;
+}
+.format-sample {
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 10px;
+  margin-top: 8px;
+  font-family: "SF Mono", Consolas, monospace;
+  font-size: 12px;
+  color: #333;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+/* PDF処理中 */
+.processing {
+  text-align: center;
+  padding: 40px 20px;
+}
+.processing-spinner {
+  width: 60px;
+  height: 60px;
+  border: 5px solid #e3f2fd;
+  border-top-color: #1a5fb4;
+  border-radius: 50%;
+  margin: 0 auto 20px;
+  animation: spin 1s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.processing-title {
+  font-size: 20px;
+  font-weight: 800;
+  margin-bottom: 8px;
+}
+.processing-msg {
+  font-size: 15px;
+  color: #666;
+  line-height: 1.6;
+}
+.processing-steps {
+  margin-top: 24px;
+  text-align: left;
+  background: #f5f9ff;
+  padding: 16px;
+  border-radius: 12px;
+}
+.processing-step {
+  font-size: 14px;
+  padding: 6px 0;
+  color: #666;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.processing-step.active { color: #1a5fb4; font-weight: 700; }
+.processing-step.done { color: #2e7d32; font-weight: 700; }
+.step-check { font-size: 18px; }
+
+/* プレビュー（マッチング結果） */
+.preview-summary {
+  background: #e8f5e9;
+  border: 2px solid #2e7d32;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+.preview-summary-title {
+  font-size: 16px;
+  font-weight: 800;
+  color: #1b5e20;
+  margin-bottom: 4px;
+}
+.preview-summary-detail {
+  font-size: 14px;
+  color: #1b5e20;
+}
+
+.preview-list { margin-bottom: 20px; }
+.preview-item {
+  background: white;
+  border: 2px solid #e5e5e5;
+  border-radius: 10px;
+  padding: 14px;
+  margin-bottom: 8px;
+  display: grid;
+  grid-template-columns: 40px 1fr auto;
+  gap: 12px;
+  align-items: center;
+}
+.preview-item.warning { border-color: #ffa000; background: #fff8e1; }
+.preview-item-num {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #e3f2fd;
+  color: #1a5fb4;
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+  font-size: 18px;
+}
+.preview-item.warning .preview-item-num {
+  background: #fff3cd;
+  color: #ef6c00;
+}
+.preview-item-body { min-width: 0; }
+.preview-item-name {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 2px;
+}
+.preview-item-detail {
+  font-size: 13px;
+  color: #666;
+}
+.preview-item-status {
+  font-size: 22px;
+  flex-shrink: 0;
+}
+
+.warning-block {
+  background: #fff8e1;
+  border: 2px solid #ffa000;
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 16px;
+  font-size: 14px;
+  color: #7c5e00;
+  line-height: 1.5;
+}
+.warning-block strong { color: #ef6c00; }
+
+.modal-foot {
+  position: sticky;
+  bottom: 0;
+  background: white;
+  padding: 16px 20px calc(16px + env(safe-area-inset-bottom));
+  border-top: 2px solid #e5e5e5;
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 10px;
+}
+.btn-cancel, .btn-save {
+  padding: 18px;
+  border-radius: 12px;
+  border: none;
+  font-family: inherit;
+  font-size: 18px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.btn-cancel { background: #f5f5f5; color: #111; border: 2px solid #ddd; }
+.btn-save { background: #1a5fb4; color: white; }
+.btn-save:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* トースト */
+.toast {
+  position: fixed;
+  bottom: calc(120px + env(safe-area-inset-bottom));
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: #2e7d32;
+  color: white;
+  padding: 16px 24px;
+  border-radius: 12px;
+  font-size: 18px;
+  font-weight: 700;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s, transform 0.3s;
+  z-index: 300;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+</style>
+</head>
+<body>
+
+<!-- ヘッダー -->
+<div class="header">
+  <div class="header-top">
+    <div style="display:flex;align-items:center;gap:10px;">
+      <a href="index.html" style="color:white;text-decoration:none;font-size:22px;background:rgba(255,255,255,0.2);width:36px;height:36px;border-radius:50%;display:grid;place-items:center;flex-shrink:0;">←</a>
+      <div>
+        <div class="header-title" style="margin:0;">📥 リスト取込</div>
+        <div class="header-date" id="dateText" style="margin:0;">2026年4月17日（金）</div>
+      </div>
+    </div>
+    <button class="header-import-btn" onclick="openImportModal()">
+      📥 取込
+    </button>
+  </div>
+  <div class="progress-row">
+    <div class="progress-text"><span class="done-num" id="doneNum">0</span> / <span id="totalNum">0</span></div>
+    <div class="progress-bar">
+      <div class="progress-fill" id="progressFill"></div>
+    </div>
+  </div>
+</div>
+
+<!-- タブ -->
+<div class="tabs">
+  <button class="tab active" data-view="route">📋 今日の配送</button>
+  <button class="tab" data-view="master">🏪 店舗リスト</button>
+</div>
+
+<!-- ルート画面 -->
+<div class="route-view" id="routeView">
+  <div class="next-section">
+    <div class="next-label" style="display:none">▼ 次はここへ</div>
+    <div id="nextCardContainer"></div>
+  </div>
+  <div class="all-list" id="allListSection" style="display:none">
+    <div class="list-title">本日の配送先</div>
+    <div class="list-hint">≡ を長押しで順番を変えられます</div>
+    <div id="stopList"></div>
+  </div>
+</div>
+
+<!-- マスタ画面（簡略） -->
+<div class="master-view" id="masterView">
+  <div class="master-placeholder">
+    🏪 店舗マスタ画面<br><small>（配送先の登録・編集画面）</small>
+  </div>
+</div>
+
+<!-- 下タブ -->
+<div class="bottom-nav">
+  <button class="nav-btn active" data-nav="route">
+    <span class="nav-icon-big">📋</span>
+    <span class="nav-label-big">今日の配送</span>
+  </button>
+  <button class="nav-btn" data-nav="master">
+    <span class="nav-icon-big">🏪</span>
+    <span class="nav-label-big">店舗リスト</span>
+  </button>
+</div>
+
+<!-- インポートモーダル -->
+<div class="modal-bg" id="importModal">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title" id="importModalTitle">配送リストを取り込む</div>
+      <button class="modal-close" onclick="closeImportModal()">✕</button>
+    </div>
+    <div class="modal-body" id="importModalBody">
+      <!-- ステップに応じて動的に差し替え -->
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"><span id="toastText"></span></div>
+
+<input type="file" id="fileInputCsv" accept=".csv" style="display:none">
+<input type="file" id="fileInputPdf" accept=".pdf,image/*" style="display:none">
+
+<script>
+// ========== 配送先マスタ（既存のデータと想定） ==========
+const SHOP_MASTER = [
+  { id: 1, name: "焼肉大将軍 名駅店", address: "名古屋市中村区名駅4-5-2", tel: "052-111-1111", contact: "山田店長", place: "back", note: "裏のシャッター開いてます" },
+  { id: 2, name: "ラーメン一番星", address: "名古屋市中村区椿町1-3", tel: "052-222-2222", contact: "佐藤オーナー", place: "kitchen", note: "冷蔵庫横まで運んでください" },
+  { id: 3, name: "カフェ ベル", address: "名古屋市中区錦2-10-5", tel: "052-333-3333", contact: "", place: "counter", note: "" },
+  { id: 4, name: "居酒屋まるきん 栄店", address: "名古屋市中区栄3-15-8 サンプルビル1F", tel: "052-444-4444", contact: "鈴木店長", place: "staff", note: "開店前なのでインターホンを鳴らしてください" },
+  { id: 5, name: "寿司処 江戸", address: "名古屋市中区大須2-8-1", tel: "052-555-5555", contact: "", place: "entrance", note: "" },
+  { id: 6, name: "焼き鳥 鳥政", address: "名古屋市中区新栄1-5-3", tel: "052-666-6666", contact: "高橋店長", place: "back", note: "重いので台車を使ってください" },
+  { id: 7, name: "中華料理 龍門", address: "名古屋市東区東桜1-12-4", tel: "052-777-7777", contact: "", place: "kitchen", note: "" },
+  { id: 8, name: "和食 さくら", address: "名古屋市東区葵3-2-1", tel: "052-888-8888", contact: "伊藤女将", place: "storage", note: "2階の倉庫へ" },
+];
+
+const PLACES = {
+  entrance: { icon: "🚪", label: "お店の入口に置く", short: "入口" },
+  back:     { icon: "🚛", label: "裏口・搬入口に置く", short: "裏口" },
+  staff:    { icon: "🙋", label: "スタッフに手渡し", short: "手渡し" },
+  kitchen:  { icon: "👨‍🍳", label: "キッチンまで運ぶ", short: "キッチン" },
+  storage:  { icon: "📦", label: "倉庫に置く", short: "倉庫" },
+  counter:  { icon: "🧾", label: "レジカウンター", short: "レジ" },
+};
+
+let route = []; // 空からスタート（取り込みで埋める）
+let importMode = null; // 'csv' or 'pdf'
+let parsedRows = []; // 取り込んだデータの一時保管
+
+function getShop(id) { return SHOP_MASTER.find(s => s.id === id); }
+function findShopByName(name) {
+  // あいまい一致
+  const normalized = name.replace(/\s+/g, '').toLowerCase();
+  return SHOP_MASTER.find(s => {
+    const sn = s.name.replace(/\s+/g, '').toLowerCase();
+    return sn === normalized || sn.includes(normalized) || normalized.includes(sn);
+  });
+}
+
+// ========== 表示系 ==========
+function renderHeader() {
+  const done = route.filter(r => r.done).length;
+  const total = route.length;
+  const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+  document.getElementById("doneNum").textContent = done;
+  document.getElementById("totalNum").textContent = total;
+  document.getElementById("progressFill").style.width = pct + "%";
+}
+
+function renderNext() {
+  const c = document.getElementById("nextCardContainer");
+  const idx = route.findIndex(r => !r.done);
+
+  // 空状態
+  if (route.length === 0) {
+    document.querySelector('.next-label').style.display = 'none';
+    document.getElementById('allListSection').style.display = 'none';
+    c.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">📭</div>
+        <div class="empty-title">配送リストがまだありません</div>
+        <div class="empty-msg">CSVまたはPDFから<br>本日の配送リストを取り込んでください</div>
+        <button class="empty-import-btn" onclick="openImportModal()">
+          📥 リストを取り込む
+        </button>
+      </div>`;
+    return;
+  }
+
+  document.getElementById('allListSection').style.display = 'block';
+
+  if (idx === -1) {
+    document.querySelector('.next-label').style.display = 'none';
+    c.innerHTML = `
+      <div class="all-done">
+        <div class="all-done-icon">🎉</div>
+        <div class="all-done-title">すべて完了しました！</div>
+        <div class="all-done-msg">本日もお疲れさまでした</div>
+      </div>`;
+    return;
+  }
+  document.querySelector('.next-label').style.display = 'block';
+  const r = route[idx];
+  const s = getShop(r.shopId);
+  if (!s) return;
+  const place = PLACES[s.place] || PLACES.entrance;
+  c.innerHTML = `
+    <div class="next-card">
+      <div class="next-top">
+        <div class="next-num">${idx+1}</div>
+        <div>
+          <div class="next-of"><span class="next-of-num">${idx+1}</span> / ${route.length} 件目</div>
+          <div style="font-size:15px;opacity:.9;">目安 ${r.time || '時刻未定'}</div>
+        </div>
+      </div>
+      <div class="next-body">
+        <div class="next-name">${s.name}</div>
+        <div class="next-address">📍 ${s.address}</div>
+        <div class="delivery-box">
+          <div class="delivery-label">納品する場所</div>
+          <div class="delivery-main">
+            <div class="delivery-icon">${place.icon}</div>
+            <div class="delivery-where">${place.label}</div>
+          </div>
+          ${s.note ? `<div class="delivery-note">${s.note}</div>` : ''}
+        </div>
+        <div class="info-row">
+          <div class="info-item">
+            <div class="info-item-label">今日の商品</div>
+            <div class="info-item-value">${r.items || '—'}</div>
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="big-btn btn-nav" onclick="openNav()">
+            <span class="btn-icon">🗺️</span>地図で道案内
+          </button>
+          <button class="big-btn btn-done" onclick="markDone()">
+            <span class="btn-icon">✓</span>配送が終わりました
+          </button>
+        </div>
+        ${s.tel ? `<button class="btn-call" onclick="callShop()">📞 お店に電話する (${s.tel})</button>` : ''}
+      </div>
+    </div>`;
+}
+
+function renderRouteList() {
+  const listEl = document.getElementById("stopList");
+  listEl.innerHTML = route.map((r, i) => {
+    const s = getShop(r.shopId);
+    if (!s) return '';
+    const place = PLACES[s.place] || PLACES.entrance;
+    return `
+      <div class="list-card ${r.done ? 'done' : ''}" data-index="${i}">
+        <div class="list-handle">≡</div>
+        <div class="list-num"><span class="num-text">${i+1}</span></div>
+        <div>
+          <div class="list-name">${s.name}</div>
+          <div class="list-meta">
+            <span class="list-place">${place.icon} ${place.short}</span>
+            <span class="list-time">⏰ ${r.time || '—'}</span>
+          </div>
+        </div>
+      </div>`;
+  }).join("");
+}
+
+function renderRoute() {
+  renderHeader();
+  renderNext();
+  renderRouteList();
+}
+
+// ========== ビュー切替 ==========
+document.querySelectorAll(".tab, .nav-btn").forEach(el => {
+  el.addEventListener("click", () => {
+    const v = el.dataset.view || el.dataset.nav;
+    document.getElementById("routeView").style.display = v === "route" ? "block" : "none";
+    document.getElementById("masterView").style.display = v === "master" ? "block" : "none";
+    document.querySelectorAll(".tab").forEach(t => t.classList.toggle("active", t.dataset.view === v));
+    document.querySelectorAll(".nav-btn").forEach(n => n.classList.toggle("active", n.dataset.nav === v));
+  });
+});
+
+// ========== 配送アクション ==========
+function openNav() {
+  const idx = route.findIndex(r => !r.done);
+  if (idx === -1) return;
+  const s = getShop(route[idx].shopId);
+  alert(`🗺️ 地図で道案内を開きます\n\n${s.name}\n${s.address}`);
+}
+function markDone() {
+  const idx = route.findIndex(r => !r.done);
+  if (idx === -1) return;
+  if (!confirm(`「${getShop(route[idx].shopId).name}」の配送が\n完了しましたか？`)) return;
+  route[idx].done = true;
+  showToast("✓ 配送完了しました");
+  renderRoute();
+}
+function callShop() {
+  const idx = route.findIndex(r => !r.done);
+  if (idx === -1) return;
+  const s = getShop(route[idx].shopId);
+  alert(`📞 ${s.tel} に電話します\n${s.name}`);
+}
+
+// ========== インポートモーダル ==========
+function openImportModal() {
+  document.getElementById("importModal").classList.add("show");
+  showImportStep1();
+}
+function closeImportModal() {
+  document.getElementById("importModal").classList.remove("show");
+  parsedRows = [];
+  importMode = null;
+}
+
+// ステップ1：形式選択
+function showImportStep1() {
+  document.getElementById("importModalTitle").textContent = "取り込み方法を選択";
+  document.getElementById("importModalBody").innerHTML = `
+    <div class="import-intro">
+      <strong>📋 今日の配送リストを取り込みます</strong><br>
+      CSVファイル または PDF（基幹システムの印刷物を撮影したもの）から取り込めます。
+    </div>
+    <div class="import-options">
+      <div class="import-option" onclick="selectCsv()">
+        <span class="import-option-icon">📊</span>
+        <div class="import-option-title">CSV</div>
+        <div class="import-option-desc">Excelやスプレッドシートから書き出したファイル</div>
+      </div>
+      <div class="import-option" onclick="selectPdf()">
+        <span class="import-option-icon">📄</span>
+        <div class="import-option-title">PDF / 写真</div>
+        <div class="import-option-desc">基幹システムの印刷物やカメラ撮影画像</div>
+      </div>
+    </div>
+    <div class="format-help">
+      <div class="format-help-title">💡 CSVフォーマット例</div>
+      <div>1行目は見出し、2行目以降にデータを入れます：</div>
+      <div class="format-sample">配送順,店舗名,商品,数量,希望時間<br>1,焼肉大将軍 名駅店,割り箸,10袋,10:00<br>2,ラーメン一番星,麺,20kg,9:30<br>3,カフェ ベル,コーヒー豆,5kg,10:20</div>
+    </div>`;
+}
+
+function selectCsv() {
+  importMode = 'csv';
+  document.getElementById("fileInputCsv").click();
+}
+function selectPdf() {
+  importMode = 'pdf';
+  document.getElementById("fileInputPdf").click();
+}
+
+// ========== CSV取込 ==========
+document.getElementById("fileInputCsv").addEventListener("change", async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const text = await file.text();
+  const rows = parseCsv(text);
+  e.target.value = '';
+  matchAndShowPreview(rows);
+});
+
+function parseCsv(text) {
+  const lines = text.trim().split(/\r?\n/).filter(l => l.trim());
+  if (lines.length < 2) return [];
+  const headers = lines[0].split(',').map(h => h.trim());
+  const idx = {
+    order: headers.findIndex(h => /配送順|順番|No/i.test(h)),
+    name: headers.findIndex(h => /店舗|店名|納品先|得意先/i.test(h)),
+    items: headers.findIndex(h => /商品|品名/i.test(h)),
+    qty: headers.findIndex(h => /数量|個数/i.test(h)),
+    time: headers.findIndex(h => /時間|時刻/i.test(h)),
+  };
+  return lines.slice(1).map((line, i) => {
+    const cols = line.split(',').map(c => c.trim());
+    return {
+      order: idx.order >= 0 ? (cols[idx.order] || (i+1)) : (i+1),
+      name: idx.name >= 0 ? cols[idx.name] : cols[1],
+      items: idx.items >= 0 ? cols[idx.items] : '',
+      qty: idx.qty >= 0 ? cols[idx.qty] : '',
+      time: idx.time >= 0 ? cols[idx.time] : '',
+    };
+  });
+}
+
+// ========== PDF取込（AI解析シミュレーション） ==========
+document.getElementById("fileInputPdf").addEventListener("change", async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  e.target.value = '';
+  showPdfProcessing();
+  // 実装時はここで実際にAI OCR（Claude API / Gemini API）を呼ぶ
+  await simulatePdfProcessing();
+  // シミュレーション：サンプルデータを生成
+  const mockRows = [
+    { order: 1, name: '焼肉大将軍 名駅店', items: '割り箸', qty: '10袋', time: '10:00' },
+    { order: 2, name: 'ラーメン一番星', items: '麺・スープ原液', qty: '20kg', time: '9:30' },
+    { order: 3, name: 'カフェ ベル', items: 'コーヒー豆、紙コップ', qty: '5kg+500個', time: '10:20' },
+    { order: 4, name: '居酒屋まるきん 栄店', items: 'お米、油', qty: '20kg+18L', time: '11:30' },
+    { order: 5, name: '寿司処 江戸', items: '割り箸、醤油', qty: '10袋+5L', time: '12:15' },
+    { order: 6, name: '焼き鳥 鳥政', items: '備長炭、タレ', qty: '15kg+3L', time: '13:00' },
+    { order: 7, name: '大衆食堂もりた', items: 'お米', qty: '30kg', time: '14:00' }, // マスタ未登録サンプル
+  ];
+  matchAndShowPreview(mockRows);
+});
+
+function showPdfProcessing() {
+  document.getElementById("importModalTitle").textContent = "PDF・画像を解析中";
+  document.getElementById("importModalBody").innerHTML = `
+    <div class="processing">
+      <div class="processing-spinner"></div>
+      <div class="processing-title">AIが読み取っています…</div>
+      <div class="processing-msg">しばらくお待ちください<br>（10〜30秒ほどかかります）</div>
+      <div class="processing-steps" id="procSteps">
+        <div class="processing-step active" id="step1"><span class="step-check">⏳</span>ファイルを読み込み中…</div>
+        <div class="processing-step" id="step2"><span class="step-check">⋯</span>文字を抽出中…</div>
+        <div class="processing-step" id="step3"><span class="step-check">⋯</span>店舗名と商品を認識中…</div>
+        <div class="processing-step" id="step4"><span class="step-check">⋯</span>配送先マスタと照合中…</div>
+      </div>
+    </div>`;
+}
+
+async function simulatePdfProcessing() {
+  await sleep(800);
+  updateStep(1, 'done'); updateStep(2, 'active');
+  await sleep(900);
+  updateStep(2, 'done'); updateStep(3, 'active');
+  await sleep(900);
+  updateStep(3, 'done'); updateStep(4, 'active');
+  await sleep(700);
+  updateStep(4, 'done');
+  await sleep(300);
+}
+function updateStep(n, state) {
+  const el = document.getElementById(`step${n}`);
+  el.className = `processing-step ${state}`;
+  const check = el.querySelector('.step-check');
+  check.textContent = state === 'done' ? '✓' : state === 'active' ? '⏳' : '⋯';
+}
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+// ========== マッチングとプレビュー ==========
+function matchAndShowPreview(rows) {
+  parsedRows = rows.map(r => {
+    const shop = findShopByName(r.name);
+    return { ...r, matchedShop: shop };
+  });
+
+  const matched = parsedRows.filter(r => r.matchedShop);
+  const unmatched = parsedRows.filter(r => !r.matchedShop);
+
+  document.getElementById("importModalTitle").textContent = "取り込み内容の確認";
+  document.getElementById("importModalBody").innerHTML = `
+    <div class="preview-summary">
+      <div class="preview-summary-title">✓ ${parsedRows.length}件 読み取りました</div>
+      <div class="preview-summary-detail">
+        マスタに登録済み：<strong>${matched.length}件</strong>
+        ${unmatched.length > 0 ? `／ 未登録：<strong style="color:#ef6c00">${unmatched.length}件</strong>` : ''}
+      </div>
+    </div>
+
+    ${unmatched.length > 0 ? `
+      <div class="warning-block">
+        ⚠️ <strong>未登録の店舗</strong>があります。このまま取り込むと「住所」「納品場所」などの情報が空になります。先に店舗リストに追加してから取り込むことをおすすめします。
+      </div>
+    ` : ''}
+
+    <div class="preview-list">
+      ${parsedRows.map((r, i) => `
+        <div class="preview-item ${r.matchedShop ? '' : 'warning'}">
+          <div class="preview-item-num">${r.order || i+1}</div>
+          <div class="preview-item-body">
+            <div class="preview-item-name">${r.name}</div>
+            <div class="preview-item-detail">
+              ${r.items ? `📦 ${r.items}` : ''}
+              ${r.qty ? ` ${r.qty}` : ''}
+              ${r.time ? ` · ⏰ ${r.time}` : ''}
+            </div>
+          </div>
+          <div class="preview-item-status">${r.matchedShop ? '✅' : '⚠️'}</div>
+        </div>
+      `).join('')}
+    </div>
+    <div class="modal-foot">
+      <button class="btn-cancel" onclick="showImportStep1()">戻る</button>
+      <button class="btn-save" onclick="confirmImport()">この内容で取り込む</button>
+    </div>`;
+}
+
+function confirmImport() {
+  const newRoute = parsedRows
+    .filter(r => r.matchedShop)
+    .map(r => ({
+      shopId: r.matchedShop.id,
+      time: r.time || '',
+      items: [r.items, r.qty].filter(x => x).join(' '),
+      done: false,
+    }));
+  route = newRoute;
+  closeImportModal();
+  showToast(`✓ ${newRoute.length}件の配送先を取り込みました`);
+  renderRoute();
+}
+
+// ========== トースト ==========
+function showToast(msg) {
+  const t = document.getElementById("toast");
+  document.getElementById("toastText").textContent = msg;
+  t.classList.add("show");
+  setTimeout(() => t.classList.remove("show"), 2200);
+}
+
+// 初期描画
+renderRoute();
+</script>
+
+</body>
+</html>
