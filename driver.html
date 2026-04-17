@@ -1373,9 +1373,9 @@ function openNav() {
   const idx = route.findIndex(r => !r.done);
   if (idx === -1) return;
   const s = getShop(route[idx].shopId);
-  const query = encodeURIComponent(s.address);
-  // スマホはGoogle Mapsアプリ、PCはブラウザで開く
-  window.open(`https://www.google.com/maps/dir/?api=1&destination=${query}`, '_blank');
+  const origin = encodeURIComponent('愛知県名古屋市昭和区小坂町一丁目12番地3');
+  const destination = encodeURIComponent(s.address);
+  window.open(`https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${destination}&travelmode=driving`, '_blank');
 }
 function markDone() {
   const idx = route.findIndex(r => !r.done);
