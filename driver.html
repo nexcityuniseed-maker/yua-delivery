@@ -1373,7 +1373,9 @@ function openNav() {
   const idx = route.findIndex(r => !r.done);
   if (idx === -1) return;
   const s = getShop(route[idx].shopId);
-  alert(`🗺️ 地図で道案内を開きます\n\n${s.name}\n${s.address}`);
+  const query = encodeURIComponent(s.address);
+  // スマホはGoogle Mapsアプリ、PCはブラウザで開く
+  window.open(`https://www.google.com/maps/dir/?api=1&destination=${query}`, '_blank');
 }
 function markDone() {
   const idx = route.findIndex(r => !r.done);
