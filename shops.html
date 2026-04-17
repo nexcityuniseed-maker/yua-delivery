@@ -696,6 +696,11 @@
 <div class="toast" id="toast"></div>
 
 <script>
+// ============================================================
+// Google Sheets Webhook URL
+// ============================================================
+const WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbwuHYmihka05oGdxfs7gFNeeqTFvE49aO7WD8Wu0f0mVELr4yxUiPZgtnAE-hLtgWXW/exec";
+
 const PLACES = {
   entrance: { icon: "🚪", label: "店舗入口" },
   back:     { icon: "🚛", label: "裏口・搬入口" },
@@ -705,25 +710,67 @@ const PLACES = {
   counter:  { icon: "🧾", label: "レジカウンター" },
 };
 
-let shops = [
-  { id: 1, name: "焼肉大将軍 名駅店", address: "名古屋市中村区名駅4-5-2", tel: "052-111-1111", contact: "山田店長", place: "back", note: "裏のシャッター開いてます", days: [1,2,3,4,5], time: "10:00〜11:00", items: "割り箸、おしぼり" },
-  { id: 2, name: "ラーメン一番星", address: "名古屋市中村区椿町1-3", tel: "052-222-2222", contact: "佐藤オーナー", place: "kitchen", note: "冷蔵庫横まで運んでください", days: [1,3,5], time: "9:00〜10:30", items: "麺、スープ原液" },
-  { id: 3, name: "カフェ ベル", address: "名古屋市中区錦2-10-5", tel: "052-333-3333", contact: "", place: "counter", note: "", days: [2,4,6], time: "9:00〜11:00", items: "コーヒー豆、紙コップ" },
-  { id: 4, name: "居酒屋まるきん 栄店", address: "名古屋市中区栄3-15-8 サンプルビル1F", tel: "052-444-4444", contact: "鈴木店長", place: "staff", note: "開店前なのでインターホン", days: [1,2,3,4,5,6], time: "11:00〜13:00", items: "お米20kg、油" },
-  { id: 5, name: "寿司処 江戸", address: "名古屋市中区大須2-8-1", tel: "052-555-5555", contact: "", place: "entrance", note: "", days: [2,5], time: "10:00〜12:00", items: "割り箸、醤油" },
-  { id: 6, name: "焼き鳥 鳥政", address: "名古屋市中区新栄1-5-3", tel: "052-666-6666", contact: "高橋店長", place: "back", note: "重いので台車で", days: [1,4], time: "13:00〜15:00", items: "備長炭、タレ" },
-  { id: 7, name: "中華料理 龍門", address: "名古屋市東区東桜1-12-4", tel: "052-777-7777", contact: "", place: "kitchen", note: "", days: [1,2,3,4,5], time: "13:00〜15:00", items: "油、調味料一式" },
-  { id: 8, name: "和食 さくら", address: "名古屋市東区葵3-2-1", tel: "052-888-8888", contact: "伊藤女将", place: "storage", note: "2階の倉庫へ", days: [1,3,5], time: "14:00〜16:00", items: "お米30kg、味噌" },
-  { id: 9, name: "とんかつ たなか 豊田店", address: "豊田市若宮町1-52", tel: "0565-11-1111", contact: "田中社長", place: "staff", note: "", days: [2,4,6], time: "14:00〜16:00", items: "パン粉、キャベツ" },
-  { id: 10, name: "居酒屋 ほろ酔い 岡崎店", address: "岡崎市康生通南2-25", tel: "0564-22-2222", contact: "", place: "entrance", note: "", days: [1,2,3,4,5,6], time: "16:00〜18:00", items: "お米、割り箸、油" },
-];
-
+let shops = [];
 let currentFilter = "all";
 let currentSearch = "";
 let editingId = null;
 let selectedPlace = null;
 let selectedDays = [];
 
+// ============================================================
+// Google Sheets API
+// ============================================================
+async function fetchShops() {
+  setSyncStatus("loading");
+  try {
+    const res = await fetch(WEBHOOK_URL);
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+    shops = data.shops || [];
+    setSyncStatus("ok");
+    render();
+  } catch (e) {
+    setSyncStatus("error");
+    showToast("⚠️ 同期失敗：" + e.message, true);
+  }
+}
+
+async function apiPost(payload) {
+  // GASはCORSのためPOSTが使えない → actionとdataをGETパラメータで送信
+  const data =
+    payload.action === 'upsert' ? { shop: payload.shop } :
+    payload.action === 'delete' ? { id: payload.id } :
+    payload;
+
+  const url = WEBHOOK_URL
+    + '?action=' + encodeURIComponent(payload.action)
+    + '&data='   + encodeURIComponent(JSON.stringify(data))
+    + '&t='      + Date.now(); // キャッシュ回避
+
+  const res = await fetch(url, { cache: 'no-store' });
+  const text = await res.text();
+  return JSON.parse(text);
+}
+
+function setSyncStatus(state) {
+  const text = document.querySelector(".sync-text");
+  const btn  = document.querySelector(".sync-btn");
+  if (state === "loading") {
+    text.innerHTML = `<strong>Google Sheets</strong> · 読み込み中…`;
+    btn.disabled = true;
+  } else if (state === "ok") {
+    const now = new Date().toLocaleTimeString("ja-JP", {hour:"2-digit", minute:"2-digit"});
+    text.innerHTML = `<strong>Google Sheets</strong> と同期中 · ${now} 更新`;
+    btn.disabled = false;
+  } else {
+    text.innerHTML = `<strong>Google Sheets</strong> · <span style="color:#d93025">接続エラー</span>`;
+    btn.disabled = false;
+  }
+}
+
+// ============================================================
+// 描画
+// ============================================================
 function render() {
   const filtered = shops.filter(s => {
     if (currentFilter === "all") return matchSearch(s);
@@ -741,7 +788,8 @@ function render() {
   listEl.innerHTML = filtered.map(s => {
     const place = PLACES[s.place] || PLACES.entrance;
     const dayLabels = ["日","月","火","水","木","金","土"];
-    const daysText = s.days.length === 7 ? "毎日" : s.days.length === 0 ? "-" : s.days.sort().map(d => dayLabels[d]).join("・");
+    const days = Array.isArray(s.days) ? s.days : [];
+    const daysText = days.length === 7 ? "毎日" : days.length === 0 ? "-" : days.sort((a,b)=>a-b).map(d => dayLabels[d]).join("・");
     return `
       <div class="shop-card" onclick="openEditModal(${s.id})">
         <div class="shop-icon">${place.icon}</div>
@@ -766,7 +814,9 @@ function matchSearch(s) {
   return s.name.toLowerCase().includes(q) || s.address.toLowerCase().includes(q);
 }
 
-// フィルタ
+// ============================================================
+// フィルタ / 検索
+// ============================================================
 document.querySelectorAll(".filter-tab").forEach(tab => {
   tab.addEventListener("click", () => {
     document.querySelectorAll(".filter-tab").forEach(t => t.classList.remove("active"));
@@ -776,13 +826,14 @@ document.querySelectorAll(".filter-tab").forEach(tab => {
   });
 });
 
-// 検索
 document.getElementById("searchInput").addEventListener("input", e => {
   currentSearch = e.target.value;
   render();
 });
 
+// ============================================================
 // モーダル：追加
+// ============================================================
 function openAddModal() {
   editingId = null;
   document.getElementById("modalTitle").textContent = "配送先を追加";
@@ -806,7 +857,7 @@ function openEditModal(id) {
   document.getElementById("f_time").value = s.time || "";
   document.getElementById("f_items").value = s.items || "";
   selectedPlace = s.place;
-  selectedDays = [...(s.days || [])];
+  selectedDays = [...(Array.isArray(s.days) ? s.days : [])];
   updateFormVisuals();
   document.getElementById("modal").classList.add("show");
 }
@@ -854,66 +905,90 @@ function closeModal() {
   document.getElementById("modal").classList.remove("show");
 }
 
-function saveShop() {
+// ============================================================
+// 保存（upsert → Sheets）
+// ============================================================
+async function saveShop() {
   const name = document.getElementById("f_name").value.trim();
   const address = document.getElementById("f_address").value.trim();
-  if (!name || !address) {
-    alert("店舗名と住所は必須です");
-    return;
-  }
-  if (!selectedPlace) {
-    alert("納品場所を選択してください");
-    return;
-  }
-  const data = {
+  if (!name || !address) { alert("店舗名と住所は必須です"); return; }
+  if (!selectedPlace)    { alert("納品場所を選択してください"); return; }
+
+  const shop = {
     name, address,
-    tel: document.getElementById("f_tel").value.trim(),
+    tel:     document.getElementById("f_tel").value.trim(),
     contact: document.getElementById("f_contact").value.trim(),
-    place: selectedPlace,
-    note: document.getElementById("f_note").value.trim(),
-    days: [...selectedDays],
-    time: document.getElementById("f_time").value.trim(),
-    items: document.getElementById("f_items").value.trim(),
+    place:   selectedPlace,
+    note:    document.getElementById("f_note").value.trim(),
+    days:    [...selectedDays],
+    time:    document.getElementById("f_time").value.trim(),
+    items:   document.getElementById("f_items").value.trim(),
   };
+  if (editingId !== null) shop.id = editingId;
 
-  if (editingId === null) {
-    data.id = Math.max(0, ...shops.map(s => s.id)) + 1;
-    shops.unshift(data);
-    showToast(`「${name}」を追加しました ✓`);
-  } else {
-    const idx = shops.findIndex(s => s.id === editingId);
-    shops[idx] = { ...shops[idx], ...data };
-    showToast(`「${name}」を更新しました ✓`);
+  const saveBtn = document.querySelector(".btn-save");
+  saveBtn.disabled = true;
+  saveBtn.textContent = "保存中…";
+
+  try {
+    const result = await apiPost({ action: "upsert", shop });
+    if (result.error) throw new Error(result.error);
+    closeModal();
+    showToast(editingId === null ? `「${name}」を追加しました ✓` : `「${name}」を更新しました ✓`);
+    await fetchShops(); // Sheetsから再取得して確認
+  } catch (e) {
+    alert("保存に失敗しました：" + e.message);
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.textContent = "保存";
   }
-  closeModal();
-  render();
-
-  // 実装時はここでGoogle Sheetsへ書き戻し
-  // syncToSheets(data);
 }
 
-function deleteShop() {
+// ============================================================
+// 削除（delete → Sheets）
+// ============================================================
+async function deleteShop() {
   if (editingId === null) return;
   const s = shops.find(x => x.id === editingId);
   if (!confirm(`「${s.name}」を削除しますか？\nこの操作は取り消せません。`)) return;
-  shops = shops.filter(x => x.id !== editingId);
-  closeModal();
-  showToast(`削除しました`);
-  render();
+
+  const delBtn = document.getElementById("deleteBtn");
+  delBtn.disabled = true;
+  delBtn.textContent = "削除中…";
+
+  try {
+    const result = await apiPost({ action: "delete", id: editingId });
+    if (result.error) throw new Error(result.error);
+    closeModal();
+    showToast("削除しました");
+    await fetchShops();
+  } catch (e) {
+    alert("削除に失敗しました：" + e.message);
+    delBtn.disabled = false;
+    delBtn.textContent = "この配送先を削除";
+  }
 }
 
-function syncNow() {
+// ============================================================
+// 手動同期ボタン
+// ============================================================
+async function syncNow() {
+  await fetchShops();
   showToast("Google Sheetsと同期しました ✓");
 }
 
-function showToast(msg) {
+function showToast(msg, isError = false) {
   const t = document.getElementById("toast");
   t.textContent = msg;
+  t.style.background = isError ? "#d93025" : "#34a853";
   t.classList.add("show");
-  setTimeout(() => t.classList.remove("show"), 1800);
+  setTimeout(() => t.classList.remove("show"), 2500);
 }
 
-render();
+// ============================================================
+// 初期ロード
+// ============================================================
+fetchShops();
 </script>
 
 </body>
