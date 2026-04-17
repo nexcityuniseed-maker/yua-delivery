@@ -749,6 +749,105 @@ body {
   opacity: 1;
   transform: translateX(-50%) translateY(0);
 }
+
+/* ===== DESKTOP (1024px+) ===== */
+@media (min-width: 1024px) {
+  body {
+    background: #f0f2f5;
+    padding-bottom: 20px;
+  }
+
+  /* Header compact on PC */
+  .header {
+    padding: 20px 32px;
+  }
+  .header-top {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  .header-title { font-size: 22px; }
+  .header-date { font-size: 14px; }
+
+  /* Progress row wider */
+  .progress-row {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  /* Tabs centered */
+  .tabs {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  /* Main layout — 2-column: next card | list */
+  .route-view {
+    max-width: 1300px;
+    margin: 0 auto;
+    padding: 28px 32px 32px;
+    display: grid;
+    grid-template-columns: minmax(380px, 520px) 1fr;
+    gap: 28px;
+    align-items: start;
+  }
+
+  .next-section {
+    padding: 0;
+    position: sticky;
+    top: 20px;
+  }
+  .next-label { font-size: 14px; }
+
+  .all-list {
+    padding: 0;
+  }
+  .list-title { font-size: 20px; }
+
+  /* List cards — compact on desktop */
+  .list-card {
+    padding: 14px 16px;
+    cursor: pointer;
+    transition: transform .15s, box-shadow .15s;
+  }
+  .list-card:hover:not(.done) {
+    transform: translateX(4px);
+    box-shadow: 0 4px 12px rgba(0,0,0,.08);
+  }
+  .list-name { font-size: 16px; }
+
+  /* Next card — shrink slightly */
+  .next-name { font-size: 22px; }
+  .next-address { font-size: 15px; }
+  .delivery-where { font-size: 19px; }
+  .big-btn {
+    padding: 16px;
+    font-size: 18px;
+  }
+
+  /* Empty state centered */
+  .empty-state {
+    max-width: 640px;
+    margin: 40px auto;
+  }
+
+  /* Hide bottom nav on desktop (use top tabs instead) */
+  .bottom-nav { display: none !important; }
+
+  /* Modal centered */
+  .modal-bg { align-items: center; }
+  .modal {
+    max-width: 720px;
+    border-radius: 20px;
+    max-height: 88vh;
+  }
+}
+
+@media (min-width: 1440px) {
+  .route-view {
+    grid-template-columns: minmax(420px, 560px) 1fr;
+    padding: 36px 48px 40px;
+  }
+}
 </style>
 </head>
 <body>

@@ -175,30 +175,194 @@ body {
   color: #666;
   margin-bottom: 4px;
 }
+
+/* ===== TABLET (768px+) ===== */
+@media (min-width: 768px) {
+  body { font-size: 16px; }
+
+  .hero {
+    padding: 36px 32px 40px;
+  }
+  .hero-icon { font-size: 48px; margin-bottom: 8px; }
+  .hero-title { font-size: 28px; }
+  .hero-subtitle { font-size: 14px; }
+
+  .menu-section {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 32px 24px 24px;
+  }
+
+  .menu-grid {
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+}
+
+/* ===== DESKTOP (1024px+) — focused on PC usability ===== */
+@media (min-width: 1024px) {
+  body {
+    font-size: 15px;
+    background: #f0f2f5;
+  }
+
+  /* Compact hero — takes much less vertical space */
+  .hero {
+    padding: 28px 40px;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    max-width: 100%;
+  }
+  .hero::before {
+    font-size: 220px;
+    right: 40px;
+    top: -40px;
+    opacity: 0.1;
+  }
+  .hero-icon {
+    font-size: 52px;
+    margin: 0;
+    flex-shrink: 0;
+  }
+  .hero-inner {
+    flex: 1;
+    min-width: 0;
+  }
+  .hero-title {
+    font-size: 26px;
+    margin-bottom: 2px;
+  }
+  .hero-subtitle {
+    font-size: 13px;
+    margin-bottom: 0;
+  }
+  .hero-company {
+    font-size: 13px;
+    border-top: none;
+    border-left: 1px solid rgba(255,255,255,0.25);
+    padding: 2px 0 2px 20px;
+    margin: 0;
+    flex-shrink: 0;
+  }
+
+  /* Wider container, centered */
+  .menu-section {
+    max-width: 1100px;
+    padding: 40px 32px 24px;
+  }
+
+  .menu-label {
+    font-size: 13px;
+    margin-bottom: 14px;
+  }
+
+  /* Driver card — still prominent but not gigantic */
+  .menu-grid.driver-grid {
+    grid-template-columns: 1fr;
+    margin-bottom: 36px;
+  }
+  .menu-card.primary {
+    padding: 28px 32px;
+    display: flex;
+    align-items: center;
+    text-align: left;
+    gap: 24px;
+  }
+  .menu-card.primary .menu-card-icon {
+    font-size: 64px;
+    margin: 0;
+    flex-shrink: 0;
+  }
+  .menu-card.primary-body {
+    flex: 1;
+  }
+  .menu-card.primary .menu-card-title {
+    font-size: 24px;
+    margin-bottom: 4px;
+  }
+  .menu-card.primary .menu-card-desc {
+    font-size: 14px;
+  }
+  .menu-card.primary .menu-card-arrow {
+    position: static;
+    font-size: 32px;
+    flex-shrink: 0;
+    opacity: 0.7;
+  }
+
+  /* Admin grid — 3 columns */
+  .menu-grid.admin-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .menu-grid.admin-grid .menu-card,
+  .menu-grid.admin-grid .menu-card[style*="span 2"] {
+    grid-column: span 1 !important;
+  }
+
+  .menu-card {
+    padding: 22px 20px 20px;
+    transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
+    border: 1px solid transparent;
+  }
+  .menu-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+    border-color: #1a5fb4;
+  }
+  .menu-card-icon { font-size: 36px; }
+  .menu-card-title { font-size: 16px; }
+  .menu-card-desc { font-size: 13px; }
+
+  /* Info cards — 2 col grid */
+  .info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .info-card {
+    margin-bottom: 0;
+  }
+
+  .version-box {
+    padding: 20px;
+  }
+}
+
+/* ===== LARGE DESKTOP (1440px+) ===== */
+@media (min-width: 1440px) {
+  .hero { padding: 32px 80px; }
+  .menu-section { padding: 48px 40px 32px; }
+}
 </style>
 </head>
 <body>
 
 <div class="hero">
   <div class="hero-icon">🚚</div>
-  <div class="hero-title">配送アプリ</div>
-  <div class="hero-subtitle">Delivery Management</div>
+  <div class="hero-inner">
+    <div class="hero-title">配送アプリ</div>
+    <div class="hero-subtitle">Delivery Management</div>
+  </div>
   <div class="hero-company">株式会社 日本ユーア東海</div>
 </div>
 
 <div class="menu-section">
   <div class="menu-label">📋 ドライバー向け</div>
-  <div class="menu-grid">
+  <div class="menu-grid driver-grid">
     <a href="driver.html" class="menu-card primary">
-      <div class="menu-card-arrow">→</div>
       <div class="menu-card-icon">🚗</div>
-      <div class="menu-card-title">今日の配送ルート</div>
-      <div class="menu-card-desc">配送先の案内・完了チェック</div>
+      <div class="primary-body">
+        <div class="menu-card-title">今日の配送ルート</div>
+        <div class="menu-card-desc">配送先の案内・完了チェック</div>
+      </div>
+      <div class="menu-card-arrow">→</div>
     </a>
   </div>
 
   <div class="menu-label">🗂 管理者向け</div>
-  <div class="menu-grid">
+  <div class="menu-grid admin-grid">
     <a href="import.html" class="menu-card">
       <div class="menu-card-arrow">→</div>
       <div class="menu-card-icon">📥</div>
@@ -220,18 +384,20 @@ body {
   </div>
 
   <div class="menu-label">ℹ️ このアプリについて</div>
-  <div class="info-card">
-    <div class="info-card-icon">🧪</div>
-    <div class="info-card-body">
-      <div class="info-card-title">プロトタイプ運用中</div>
-      <div class="info-card-desc">現場で試しながら改善していきます</div>
+  <div class="info-grid">
+    <div class="info-card">
+      <div class="info-card-icon">🧪</div>
+      <div class="info-card-body">
+        <div class="info-card-title">プロトタイプ運用中</div>
+        <div class="info-card-desc">現場で試しながら改善していきます</div>
+      </div>
     </div>
-  </div>
-  <div class="info-card">
-    <div class="info-card-icon">💬</div>
-    <div class="info-card-body">
-      <div class="info-card-title">改善したい点があれば</div>
-      <div class="info-card-desc">KosukeさんにLINE等で報告してください</div>
+    <div class="info-card">
+      <div class="info-card-icon">💬</div>
+      <div class="info-card-body">
+        <div class="info-card-title">改善したい点があれば</div>
+        <div class="info-card-desc">KosukeさんにLINE等で報告してください</div>
+      </div>
     </div>
   </div>
 </div>

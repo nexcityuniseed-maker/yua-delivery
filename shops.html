@@ -447,6 +447,86 @@
   .footer-icon { font-size: 22px; }
 
   /* トースト */
+  /* ===== DESKTOP (1024px+) ===== */
+  @media (min-width: 1024px) {
+    body {
+      background: #f0f2f5;
+      padding-bottom: 20px;
+    }
+    /* Compact sticky header with back button aligned */
+    .header {
+      padding: 14px 32px;
+      max-width: 100%;
+    }
+    .header-title { font-size: 18px; }
+    .header-count { font-size: 14px; }
+
+    .search-bar {
+      padding: 14px 32px;
+      top: 52px;
+    }
+    .search-input {
+      max-width: 520px;
+      padding: 12px 16px;
+      font-size: 15px;
+    }
+
+    .sync-bar {
+      padding: 10px 32px;
+      font-size: 13px;
+    }
+    .filter-tabs {
+      padding: 10px 32px;
+    }
+
+    /* Centered wider list with grid layout */
+    .shop-list {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px 32px;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 12px;
+    }
+    .shop-card {
+      margin-bottom: 0;
+      padding: 16px 18px;
+      transition: transform .15s, box-shadow .15s, border-color .15s;
+      border: 1px solid transparent;
+    }
+    .shop-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(0,0,0,.08);
+      border-color: #1a73e8;
+    }
+    .shop-name { font-size: 16px; }
+    .shop-address { font-size: 13px; }
+
+    /* Hide mobile footer nav on desktop */
+    .footer { display: none !important; }
+
+    /* FAB becomes a nice corner button on desktop */
+    .fab {
+      bottom: 32px;
+      right: 32px;
+      width: 64px;
+      height: 64px;
+      border-radius: 32px;
+    }
+
+    /* Modal becomes centered card on desktop */
+    .modal-overlay { align-items: center; }
+    .modal {
+      max-width: 680px;
+      border-radius: 20px;
+      max-height: 88vh;
+    }
+  }
+
+  @media (min-width: 1440px) {
+    .shop-list { padding: 28px 48px; }
+  }
+
   .toast {
     position: fixed;
     bottom: 110px;

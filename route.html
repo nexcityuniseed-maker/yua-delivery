@@ -603,6 +603,86 @@ body {
   opacity: 1;
   transform: translateX(-50%) translateY(0);
 }
+
+/* ===== DESKTOP (1024px+) ===== */
+@media (min-width: 1024px) {
+  body {
+    background: #f0f2f5;
+  }
+
+  /* Compact stepper */
+  .stepper {
+    padding: 18px 32px;
+  }
+  .stepper-title { font-size: 20px; }
+  .stepper-row {
+    max-width: 720px;
+    margin: 0 auto;
+  }
+
+  /* Main page container */
+  .page {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 32px 32px 40px;
+  }
+  .page-header { margin-bottom: 20px; }
+  .page-title { font-size: 24px; }
+  .page-subtitle { font-size: 14px; }
+
+  /* Cards */
+  .card {
+    padding: 24px 28px;
+  }
+
+  /* Count selector — align horizontally */
+  .count-selector {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+  }
+
+  /* Vehicle setup — show 2 per row */
+  .vehicle-cards {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+  }
+  .vehicle-card { margin-bottom: 0; }
+
+  /* Results — 2-column layout */
+  .result-vehicles {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+  }
+  .result-vehicle { margin-bottom: 0; }
+
+  /* Summary box */
+  .summary-box {
+    max-width: 600px;
+  }
+
+  /* Calc spinner centered */
+  .calc-wrap {
+    max-width: 560px;
+    margin: 60px auto;
+  }
+
+  /* Hide bottom action bar overlap on desktop (if any) */
+  /* Sticky save/next buttons should stay but be centered */
+  .page-footer-fixed, .bottom-fixed {
+    position: static !important;
+    max-width: 1100px;
+    margin: 20px auto 0;
+  }
+}
+
+@media (min-width: 1440px) {
+  .page { padding: 40px 48px 48px; }
+  .vehicle-cards, .result-vehicles {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
 </style>
 </head>
 <body>
