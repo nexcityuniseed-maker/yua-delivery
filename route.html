@@ -200,14 +200,24 @@ body {
 .vehicle-badge {
   background: #1a5fb4;
   color: white;
-  width: 44px;
-  height: 44px;
+  width: 54px;
+  height: 54px;
   border-radius: 10px;
-  display: grid;
-  place-items: center;
-  font-weight: 900;
-  font-size: 18px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   flex-shrink: 0;
+  line-height: 1.2;
+}
+.vehicle-badge .badge-num {
+  font-size: 22px;
+  font-weight: 900;
+}
+.vehicle-badge .badge-label {
+  font-size: 11px;
+  font-weight: 700;
+  opacity: 0.9;
 }
 .vehicle-label {
   font-size: 18px;
@@ -889,7 +899,7 @@ function renderVehicles() {
   el.innerHTML = vehicles.map((v, i) => `
     <div class="vehicle-card">
       <div class="vehicle-head">
-        <div class="vehicle-badge">${v.id}号車</div>
+        <div class="vehicle-badge"><span class="badge-num">${v.id}</span><span class="badge-label">号車</span></div>
         <div class="vehicle-label">ドライバー情報</div>
       </div>
       <div class="vehicle-grid">
