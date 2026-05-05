@@ -885,9 +885,9 @@ function formatJpDate(s) {
 }
 function deriveArea(address) {
   if (!address) return 'その他';
-  const m1 = address.match(/名古屋市([^市区町村0-9]+区)/);
+  const m1 = address.match(/名古屋市([^市区0-9]+区)/);
   if (m1) return '名古屋市' + m1[1];
-  const m2 = address.match(/^([^市区町村0-9]+市)/);
+  const m2 = address.match(/^([^市0-9]+市)/);
   if (m2) return m2[1];
   return 'その他';
 }

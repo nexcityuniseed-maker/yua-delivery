@@ -238,7 +238,20 @@ function getRouteSheet_() {
 
 function rowToRoute_(headers, row) {
   const obj = {};
-  headers.forEach((h, i) => { obj[h] = row[i]; });
+  headers.forEach((h, i) => {
+    let v = row[i];
+    // Sheetsが自動変換するDate型を文字列に戻す
+    if (v instanceof Date) {
+      if (h === 'date') {
+        v = v.getFullYear() + '-' + String(v.getMonth() + 1).padStart(2, '0') + '-' + String(v.getDate()).padStart(2, '0');
+      } else if (h === 'scheduledTime') {
+        v = String(v.getHours()).padStart(2, '0') + ':' + String(v.getMinutes()).padStart(2, '0');
+      } else {
+        v = v.toISOString();
+      }
+    }
+    obj[h] = v;
+  });
   ['id', 'vehicleId', 'order', 'shopId'].forEach(k => {
     if (obj[k] === '' || obj[k] === null || obj[k] === undefined) {
       if (k === 'shopId') obj[k] = '';
