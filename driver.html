@@ -812,6 +812,15 @@ body {
   align-items: center;
   gap: 12px;
   border-bottom: 2px solid #c8e6c9;
+  transition: background 0.2s, border-color 0.2s;
+}
+.sync-bar.loading {
+  background: #fff8e1;
+  border-bottom-color: #ffe082;
+}
+.sync-bar.error {
+  background: #ffebee;
+  border-bottom-color: #ffcdd2;
 }
 .sync-dot {
   width: 12px;
@@ -819,12 +828,32 @@ body {
   background: #2e7d32;
   border-radius: 50%;
   flex-shrink: 0;
+  transition: background 0.2s;
+}
+.sync-bar.loading .sync-dot {
+  background: #ffa000;
+  animation: pulse 1.2s ease-in-out infinite;
+}
+.sync-bar.error .sync-dot { background: #c62828; }
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.85); }
 }
 .sync-text {
   flex: 1;
   font-size: 15px;
   color: #1b5e20;
   font-weight: 700;
+  transition: color 0.2s;
+}
+.sync-bar.loading .sync-text { color: #ef6c00; }
+.sync-bar.error .sync-text { color: #c62828; }
+.sync-text small {
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+  opacity: 0.75;
+  margin-top: 2px;
 }
 .sync-btn-small {
   background: white;
@@ -836,7 +865,11 @@ body {
   font-size: 14px;
   font-weight: 700;
   cursor: pointer;
+  transition: border-color 0.2s, color 0.2s;
 }
+.sync-bar.loading .sync-btn-small { border-color: #ffa000; color: #ef6c00; }
+.sync-bar.error .sync-btn-small { border-color: #c62828; color: #c62828; }
+.sync-btn-small:disabled { opacity: 0.5; cursor: not-allowed; }
 
 /* ===== DESKTOP (1024px+) ===== */
 @media (min-width: 1024px) {
@@ -1042,10 +1075,10 @@ body {
   <div class="search-area">
     <input type="text" class="search-box" id="searchInput" placeholder="店舗名で検索">
   </div>
-  <div class="sync-bar">
-    <div class="sync-dot"></div>
-    <div class="sync-text">Google スプレッドシートと連動中</div>
-    <button class="sync-btn-small" onclick="syncNow()">更新</button>
+  <div class="sync-bar" id="syncBar">
+    <div class="sync-dot" id="syncDot"></div>
+    <div class="sync-text" id="syncText">Google スプレッドシートと連動中</div>
+    <button class="sync-btn-small" id="syncBtn" onclick="syncNow()">更新</button>
   </div>
   <div class="filter-row">
     <button class="filter-btn active" data-filter="all">すべて</button>
@@ -1159,6 +1192,9 @@ body {
 <div class="toast" id="toast"><span id="toastText"></span></div>
 
 <script>
+const WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbwuHYmihka05oGdxfs7gFNeeqTFvE49aO7WD8Wu0f0mVELr4yxUiPZgtnAE-hLtgWXW/exec";
+const SHOPS_CACHE_KEY = "yua_shops_cache_v1";
+
 const PLACES = {
   entrance: { icon: "🚪", label: "お店の入口に置く", short: "入口" },
   back:     { icon: "🚛", label: "裏口・搬入口に置く", short: "裏口" },
@@ -1168,18 +1204,7 @@ const PLACES = {
   counter:  { icon: "🧾", label: "レジカウンター", short: "レジ" },
 };
 
-let shops = [
-  { id: 1, name: "焼肉大将軍 名駅店", address: "名古屋市中村区名駅4-5-2", tel: "052-111-1111", contact: "山田店長", place: "back", note: "裏のシャッター開いてます", days: [1,2,3,4,5], time: "10:00〜11:00", items: "割り箸、おしぼり" },
-  { id: 2, name: "ラーメン一番星", address: "名古屋市中村区椿町1-3", tel: "052-222-2222", contact: "佐藤オーナー", place: "kitchen", note: "冷蔵庫横まで運んでください", days: [1,3,5], time: "9:00〜10:30", items: "麺、スープ原液" },
-  { id: 3, name: "カフェ ベル", address: "名古屋市中区錦2-10-5", tel: "052-333-3333", contact: "", place: "counter", note: "", days: [2,4,6], time: "9:00〜11:00", items: "コーヒー豆、紙コップ" },
-  { id: 4, name: "居酒屋まるきん 栄店", address: "名古屋市中区栄3-15-8 サンプルビル1F", tel: "052-444-4444", contact: "鈴木店長", place: "staff", note: "開店前なのでインターホンを鳴らしてください", days: [1,2,3,4,5,6], time: "11:00〜13:00", items: "お米20kg、油" },
-  { id: 5, name: "寿司処 江戸", address: "名古屋市中区大須2-8-1", tel: "052-555-5555", contact: "", place: "entrance", note: "", days: [2,5], time: "10:00〜12:00", items: "割り箸、醤油" },
-  { id: 6, name: "焼き鳥 鳥政", address: "名古屋市中区新栄1-5-3", tel: "052-666-6666", contact: "高橋店長", place: "back", note: "重いので台車を使ってください", days: [1,4], time: "13:00〜15:00", items: "備長炭、タレ" },
-  { id: 7, name: "中華料理 龍門", address: "名古屋市東区東桜1-12-4", tel: "052-777-7777", contact: "", place: "kitchen", note: "", days: [1,2,3,4,5], time: "13:00〜15:00", items: "油、調味料一式" },
-  { id: 8, name: "和食 さくら", address: "名古屋市東区葵3-2-1", tel: "052-888-8888", contact: "伊藤女将", place: "storage", note: "2階の倉庫へ", days: [1,3,5], time: "14:00〜16:00", items: "お米30kg、味噌" },
-  { id: 9, name: "とんかつ たなか 豊田店", address: "豊田市若宮町1-52", tel: "0565-11-1111", contact: "田中社長", place: "staff", note: "", days: [2,4,6], time: "14:00〜16:00", items: "パン粉、キャベツ" },
-  { id: 10, name: "居酒屋 ほろ酔い 岡崎店", address: "岡崎市康生通南2-25", tel: "0564-22-2222", contact: "", place: "entrance", note: "", days: [1,2,3,4,5,6], time: "16:00〜18:00", items: "お米、割り箸、油" },
-];
+let shops = [];
 
 let route = [
   { shopId: 1, time: "9:00", done: true },
@@ -1203,6 +1228,91 @@ let selectedDays = [];
 
 function getShop(id) { return shops.find(s => s.id === id); }
 
+// ============================================================
+// Google Sheets API
+// ============================================================
+async function fetchShops() {
+  setSyncStatus("loading");
+  try {
+    const res = await fetch(WEBHOOK_URL + '?t=' + Date.now(), { cache: 'no-store' });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+    shops = data.shops || [];
+    try { localStorage.setItem(SHOPS_CACHE_KEY, JSON.stringify({ shops, savedAt: Date.now() })); } catch (_) {}
+    setSyncStatus("ok");
+    renderRoute();
+    if (currentView === "master") renderMaster();
+    return shops;
+  } catch (e) {
+    const cached = loadCachedShops();
+    if (cached) {
+      shops = cached.shops;
+      setSyncStatus("error", `オフライン表示中（${formatCacheTime(cached.savedAt)}）`);
+      renderRoute();
+      if (currentView === "master") renderMaster();
+    } else {
+      shops = [];
+      setSyncStatus("error", "接続できません");
+    }
+    showToast("⚠️ 同期失敗：" + e.message);
+    throw e;
+  }
+}
+
+async function apiPost(payload) {
+  const data =
+    payload.action === 'upsert' ? { shop: payload.shop } :
+    payload.action === 'delete' ? { id: payload.id } :
+    payload;
+  const url = WEBHOOK_URL
+    + '?action=' + encodeURIComponent(payload.action)
+    + '&data='   + encodeURIComponent(JSON.stringify(data))
+    + '&t='      + Date.now();
+  const res = await fetch(url, { cache: 'no-store' });
+  const text = await res.text();
+  return JSON.parse(text);
+}
+
+function loadCachedShops() {
+  try {
+    const raw = localStorage.getItem(SHOPS_CACHE_KEY);
+    if (!raw) return null;
+    const obj = JSON.parse(raw);
+    if (!obj || !Array.isArray(obj.shops)) return null;
+    return obj;
+  } catch (_) { return null; }
+}
+
+function formatCacheTime(ts) {
+  if (!ts) return '';
+  const d = new Date(ts);
+  return d.toLocaleString('ja-JP', { month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit' });
+}
+
+function setSyncStatus(state, message) {
+  const bar  = document.getElementById("syncBar");
+  const text = document.getElementById("syncText");
+  const btn  = document.getElementById("syncBtn");
+  if (!bar) return;
+  bar.classList.remove("loading", "error");
+  if (state === "loading") {
+    bar.classList.add("loading");
+    text.innerHTML = `Google スプレッドシートから読み込み中…`;
+    btn.disabled = true;
+    btn.textContent = "更新中";
+  } else if (state === "ok") {
+    const now = new Date().toLocaleTimeString("ja-JP", { hour:"2-digit", minute:"2-digit" });
+    text.innerHTML = `Google スプレッドシートと連動中<small>${now} 同期 · ${shops.length}件</small>`;
+    btn.disabled = false;
+    btn.textContent = "更新";
+  } else {
+    bar.classList.add("error");
+    text.innerHTML = `接続エラー${message ? `<small>${message}</small>` : ''}`;
+    btn.disabled = false;
+    btn.textContent = "再試行";
+  }
+}
+
 function renderHeader() {
   const done = route.filter(r => r.done).length;
   const total = route.length;
@@ -1213,14 +1323,27 @@ function renderHeader() {
 }
 
 function renderNext() {
-  const idx = route.findIndex(r => !r.done);
   const c = document.getElementById("nextCardContainer");
+  // shopsがまだ読み込まれていない場合
+  if (shops.length === 0) {
+    c.innerHTML = `
+      <div class="all-done">
+        <div class="all-done-icon">⏳</div>
+        <div class="all-done-title">配送先を読み込み中…</div>
+        <div class="all-done-msg">Google スプレッドシートから取得しています</div>
+      </div>`;
+    document.querySelector('.next-label').style.display = 'none';
+    return;
+  }
+  // 店舗が紐づく未完了の最初の項目を探す
+  const idx = route.findIndex(r => !r.done && getShop(r.shopId));
   if (idx === -1) {
+    const remaining = route.filter(r => !r.done && !getShop(r.shopId)).length;
     c.innerHTML = `
       <div class="all-done">
         <div class="all-done-icon">🎉</div>
         <div class="all-done-title">すべて完了しました！</div>
-        <div class="all-done-msg">本日もお疲れさまでした</div>
+        <div class="all-done-msg">本日もお疲れさまでした${remaining ? `<br><small style="color:#999;font-size:14px;">（店舗マスタに無いため${remaining}件は表示できません）</small>` : ''}</div>
       </div>`;
     document.querySelector('.next-label').style.display = 'none';
     return;
@@ -1228,7 +1351,6 @@ function renderNext() {
   document.querySelector('.next-label').style.display = 'block';
   const r = route[idx];
   const s = getShop(r.shopId);
-  if (!s) return;
   const place = PLACES[s.place] || PLACES.entrance;
   c.innerHTML = `
     <div class="next-card">
@@ -1274,6 +1396,10 @@ function renderNext() {
 
 function renderRouteList() {
   const listEl = document.getElementById("stopList");
+  if (shops.length === 0) {
+    listEl.innerHTML = `<div style="text-align:center;padding:30px 20px;color:#999;font-size:15px;">読み込み中…</div>`;
+    return;
+  }
   listEl.innerHTML = route.map((r, i) => {
     const s = getShop(r.shopId);
     if (!s) return '';
@@ -1369,8 +1495,11 @@ document.querySelectorAll(".filter-btn").forEach(p => {
   });
 });
 
+function nextActiveIndex() {
+  return route.findIndex(r => !r.done && getShop(r.shopId));
+}
 function openNav() {
-  const idx = route.findIndex(r => !r.done);
+  const idx = nextActiveIndex();
   if (idx === -1) return;
   const s = getShop(route[idx].shopId);
   const origin = encodeURIComponent('愛知県名古屋市昭和区小坂町一丁目12番地3');
@@ -1378,7 +1507,7 @@ function openNav() {
   window.open(`https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${destination}&travelmode=driving`, '_blank');
 }
 function markDone() {
-  const idx = route.findIndex(r => !r.done);
+  const idx = nextActiveIndex();
   if (idx === -1) return;
   if (!confirm(`「${getShop(route[idx].shopId).name}」の配送が\n完了しましたか？`)) return;
   route[idx].done = true;
@@ -1387,17 +1516,19 @@ function markDone() {
 }
 function toggleDone(i) {
   if (route[i].done) {
-    if (confirm(`「${getShop(route[i].shopId).name}」の完了を\n取り消しますか？`)) {
+    const s = getShop(route[i].shopId);
+    if (!s) return;
+    if (confirm(`「${s.name}」の完了を\n取り消しますか？`)) {
       route[i].done = false;
       renderRoute();
     }
   }
 }
 function callShop() {
-  const idx = route.findIndex(r => !r.done);
+  const idx = nextActiveIndex();
   if (idx === -1) return;
   const s = getShop(route[idx].shopId);
-  alert(`📞 ${s.tel} に電話します\n${s.name}`);
+  if (s.tel) location.href = `tel:${s.tel.replace(/[^0-9+]/g, '')}`;
 }
 
 function openAddModal() {
@@ -1458,12 +1589,12 @@ document.querySelectorAll(".day-btn").forEach(el => {
 function closeModal() {
   document.getElementById("modal").classList.remove("show");
 }
-function saveShop() {
+async function saveShop() {
   const name = document.getElementById("f_name").value.trim();
   const address = document.getElementById("f_address").value.trim();
   if (!name || !address) return alert("お店の名前と住所を入力してください");
   if (!selectedPlace) return alert("納品する場所を選んでください");
-  const data = {
+  const shop = {
     name, address,
     tel: document.getElementById("f_tel").value.trim(),
     contact: document.getElementById("f_contact").value.trim(),
@@ -1473,30 +1604,52 @@ function saveShop() {
     time: document.getElementById("f_time").value.trim(),
     items: document.getElementById("f_items").value.trim(),
   };
-  if (editingId === null) {
-    data.id = Math.max(0, ...shops.map(s => s.id)) + 1;
-    shops.unshift(data);
-    showToast(`「${name}」を追加しました`);
-  } else {
-    const idx = shops.findIndex(s => s.id === editingId);
-    shops[idx] = { ...shops[idx], ...data };
-    showToast(`「${name}」を更新しました`);
+  if (editingId !== null) shop.id = editingId;
+
+  const saveBtn = document.querySelector(".btn-save");
+  const origLabel = saveBtn.textContent;
+  saveBtn.disabled = true;
+  saveBtn.textContent = "保存中…";
+  try {
+    const result = await apiPost({ action: "upsert", shop });
+    if (result.error) throw new Error(result.error);
+    closeModal();
+    showToast(editingId === null ? `「${name}」を追加しました ✓` : `「${name}」を更新しました ✓`);
+    await fetchShops();
+  } catch (e) {
+    alert("保存に失敗しました：" + e.message);
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.textContent = origLabel;
   }
-  closeModal();
-  renderMaster();
-  renderRoute();
 }
-function deleteShop() {
+async function deleteShop() {
   if (editingId === null) return;
   const s = getShop(editingId);
+  if (!s) return;
   if (!confirm(`「${s.name}」を削除しますか？\n元に戻せません。`)) return;
-  shops = shops.filter(x => x.id !== editingId);
-  closeModal();
-  showToast(`削除しました`);
-  renderMaster();
+
+  const delBtn = document.getElementById("deleteBtn");
+  const origLabel = delBtn.textContent;
+  delBtn.disabled = true;
+  delBtn.textContent = "削除中…";
+  try {
+    const result = await apiPost({ action: "delete", id: editingId });
+    if (result.error) throw new Error(result.error);
+    closeModal();
+    showToast(`削除しました`);
+    await fetchShops();
+  } catch (e) {
+    alert("削除に失敗しました：" + e.message);
+    delBtn.disabled = false;
+    delBtn.textContent = origLabel;
+  }
 }
-function syncNow() {
-  showToast("✓ 最新の情報に更新しました");
+async function syncNow() {
+  try {
+    await fetchShops();
+    showToast("✓ 最新の情報に更新しました");
+  } catch (_) { /* fetchShops側でトースト出済み */ }
 }
 
 function showToast(msg) {
@@ -1602,7 +1755,15 @@ function reorderRoute(from, to) {
   renderRoute();
 }
 
-renderRoute();
+// 起動時：キャッシュがあれば即描画 → Sheetsから最新を取得
+(function init() {
+  const cached = loadCachedShops();
+  if (cached && Array.isArray(cached.shops) && cached.shops.length) {
+    shops = cached.shops;
+  }
+  renderRoute();
+  fetchShops().catch(() => {});
+})();
 </script>
 
 </body>
