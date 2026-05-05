@@ -303,6 +303,32 @@ body {
 }
 .toggle.on::after { transform: translateX(22px); }
 
+/* 取込なし状態 */
+.imports-empty {
+  background: #fff8e1;
+  border: 2px solid #ffe082;
+  border-radius: 14px;
+  padding: 24px 20px;
+  text-align: center;
+  margin-bottom: 20px;
+}
+.imports-empty-icon { font-size: 48px; margin-bottom: 10px; }
+.imports-empty-title { font-size: 18px; font-weight: 700; margin-bottom: 6px; }
+.imports-empty-desc { font-size: 14px; color: #666; margin-bottom: 16px; }
+.imports-empty-btn {
+  display: inline-block;
+  background: #1a5fb4;
+  color: white;
+  padding: 12px 24px;
+  border-radius: 10px;
+  text-decoration: none;
+  font-weight: 700;
+  font-family: inherit;
+  border: none;
+  cursor: pointer;
+  font-size: 15px;
+}
+
 /* 出発地点 */
 .depot-input {
   width: 100%;
@@ -725,12 +751,13 @@ body {
     <div class="page-subtitle">何台で配送するか決めて、ドライバー名を入力してください</div>
   </div>
 
-  <div class="summary-box">
+  <div class="summary-box" id="summaryBox">
     <div class="summary-icon">📦</div>
     <div class="summary-text">
-      <div class="summary-title">取り込んだ配送先</div>
-      <div class="summary-detail"><strong id="totalDeliveryCount">23</strong> 件（名古屋市 18件・豊田市 3件・岡崎市 2件）</div>
+      <div class="summary-title">本日の配送先</div>
+      <div class="summary-detail" id="summaryDetail">読み込み中…</div>
     </div>
+    <button onclick="reloadImports()" style="background:rgba(255,255,255,0.7);border:1px solid #1a5fb4;color:#0d47a1;padding:6px 12px;border-radius:8px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;">再読込</button>
   </div>
 
   <!-- 台数選択 -->
@@ -750,7 +777,7 @@ body {
   <div class="card">
     <div class="section-label" style="margin-bottom: 6px;">出発地点</div>
     <div style="font-size: 13px; color: #666; margin-bottom: 10px;">全車両の出発地点</div>
-    <input type="text" class="depot-input" id="depotInput" value="愛知県名古屋市西区浄心1-1-1（本社倉庫）">
+    <input type="text" class="depot-input" id="depotInput" value="愛知県名古屋市昭和区小坂町一丁目12番地3（本社）">
   </div>
 
   <!-- 詳細オプション -->
@@ -842,44 +869,55 @@ body {
 <div class="toast" id="toast"><span id="toastText"></span></div>
 
 <script>
+// ===== 設定 =====
+const WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbwuHYmihka05oGdxfs7gFNeeqTFvE49aO7WD8Wu0f0mVELr4yxUiPZgtnAE-hLtgWXW/exec";
+const HOMEBASE_ADDRESS = "愛知県名古屋市昭和区小坂町一丁目12番地3";
+
+function todayStr() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function formatJpDate(s) {
+  if (!s) return '';
+  const [y,m,d] = s.split('-').map(n => parseInt(n));
+  const dow = ['日','月','火','水','木','金','土'][new Date(y, m-1, d).getDay()];
+  return `${y}年${m}月${d}日（${dow}）`;
+}
+function deriveArea(address) {
+  if (!address) return 'その他';
+  const m1 = address.match(/名古屋市([^市区町村0-9]+区)/);
+  if (m1) return '名古屋市' + m1[1];
+  const m2 = address.match(/^([^市区町村0-9]+市)/);
+  if (m2) return m2[1];
+  return 'その他';
+}
+async function apiPost(payload) {
+  const url = WEBHOOK_URL
+    + '?action=' + encodeURIComponent(payload.action)
+    + '&data='   + encodeURIComponent(JSON.stringify(payload))
+    + '&t='      + Date.now();
+  const res = await fetch(url, { cache: 'no-store' });
+  return JSON.parse(await res.text());
+}
+
 // ===== データ =====
-// 取り込み済みの配送先（実際はCSV/PDFから来る）
-const deliveryList = [
-  { id: 1, name: "焼肉大将軍 名駅店", area: "名古屋中村区", time: "10:00", items: "割り箸10袋" },
-  { id: 2, name: "ラーメン一番星", area: "名古屋中村区", time: "9:30", items: "麺20kg" },
-  { id: 3, name: "カフェ ベル", area: "名古屋中区", time: "10:20", items: "コーヒー豆5kg" },
-  { id: 4, name: "居酒屋まるきん 栄店", area: "名古屋中区", time: "11:30", items: "お米20kg" },
-  { id: 5, name: "寿司処 江戸", area: "名古屋中区", time: "12:15", items: "醤油5L" },
-  { id: 6, name: "焼き鳥 鳥政", area: "名古屋中区", time: "13:00", items: "備長炭15kg" },
-  { id: 7, name: "中華料理 龍門", area: "名古屋東区", time: "13:45", items: "油18L" },
-  { id: 8, name: "和食 さくら", area: "名古屋東区", time: "14:20", items: "お米30kg" },
-  { id: 9, name: "とんかつ たなか", area: "名古屋千種区", time: "15:00", items: "パン粉10kg" },
-  { id: 10, name: "喫茶マドンナ", area: "名古屋千種区", time: "15:40", items: "砂糖5kg" },
-  { id: 11, name: "イタリアン ベラ", area: "名古屋昭和区", time: "16:20", items: "小麦粉20kg" },
-  { id: 12, name: "居酒屋 ほろ酔い", area: "名古屋瑞穂区", time: "17:00", items: "お米20kg" },
-  { id: 13, name: "串カツ 黒門", area: "名古屋中区", time: "11:00", items: "串300本" },
-  { id: 14, name: "カレーハウス グル", area: "名古屋中村区", time: "9:45", items: "ライス30kg" },
-  { id: 15, name: "お好み焼き 粉や", area: "名古屋東区", time: "14:00", items: "小麦粉15kg" },
-  { id: 16, name: "うなぎ屋 辰巳", area: "名古屋中区", time: "10:30", items: "備長炭20kg" },
-  { id: 17, name: "牛タン 利久", area: "名古屋東区", time: "14:30", items: "塩10kg" },
-  { id: 18, name: "天ぷら処 天富", area: "名古屋中区", time: "12:00", items: "油30L" },
-  { id: 19, name: "とんかつ たなか 豊田店", area: "豊田市", time: "10:00", items: "パン粉15kg" },
-  { id: 20, name: "喫茶 木漏れ日", area: "豊田市", time: "11:00", items: "砂糖3kg" },
-  { id: 21, name: "ラーメン龍の家", area: "豊田市", time: "12:00", items: "麺15kg" },
-  { id: 22, name: "居酒屋 ほろ酔い 岡崎店", area: "岡崎市", time: "16:30", items: "お米20kg" },
-  { id: 23, name: "焼肉 牛鉄 岡崎店", area: "岡崎市", time: "17:30", items: "備長炭25kg" },
-];
+let deliveryList = []; // route_get で取得：今日の配送先（vehicleId問わず）
 
 // 状態
 let currentPage = 1;
 let vehicleCount = 3;
 let vehicles = [];
 let options = { area: true, time: true, even: true };
-let depot = "愛知県名古屋市西区浄心1-1-1（本社倉庫）";
+let currentDate = todayStr();
+let depot = HOMEBASE_ADDRESS;
 let routeResult = []; // [{vehicleId, stops: [...]}]
 
-// ===== 初期化 =====
-document.getElementById("totalDeliveryCount").textContent = deliveryList.length;
+// URL params から日付を読み込み
+(function readParams() {
+  const p = new URLSearchParams(location.search);
+  const dt = p.get('date');
+  if (dt && /^\d{4}-\d{2}-\d{2}$/.test(dt)) currentDate = dt;
+})();
 
 function initVehicles(count) {
   vehicles = [];
@@ -993,17 +1031,20 @@ function updateFooter() {
 
 function goBack() {
   if (currentPage === 1) {
-    if (confirm("取り込み画面に戻りますか？\n入力した情報は失われます。")) {
-      alert("（デモなので戻れません。実装時は取り込み画面に戻ります）");
+    if (confirm("取り込み画面に戻りますか？")) {
+      location.href = `import.html?date=${currentDate}`;
     }
   } else if (currentPage === 3) {
     goToPage(1);
   }
 }
 
-function goNext() {
+async function goNext() {
   if (currentPage === 1) {
-    // バリデーション
+    if (deliveryList.length === 0) {
+      alert("配送先が読み込まれていません。\n「再読込」を試すか、取り込みを先に済ませてください。");
+      return;
+    }
     const missingDriver = vehicles.find(v => !v.driver.trim());
     if (missingDriver) {
       alert(`${missingDriver.id}号車のドライバー名を入力してください`);
@@ -1012,14 +1053,99 @@ function goNext() {
     goToPage(2);
     runRouteOptimization();
   } else if (currentPage === 3) {
-    // 確定
-    if (confirm("このルートで確定しますか？\nドライバーのアプリに配信されます。")) {
-      showToast("✓ ルートを確定し、各ドライバーに配信しました");
-      setTimeout(() => {
-        alert("ドライバー別のアプリ画面に遷移します\n（デモなのでここで終わります）");
-      }, 1500);
-    }
+    await confirmAndSave();
   }
+}
+
+async function confirmAndSave() {
+  if (!confirm("このルートで確定しますか？\nドライバーのアプリに配信されます。")) return;
+  const nextBtn = document.getElementById("nextBtn");
+  nextBtn.disabled = true;
+  nextBtn.innerHTML = "保存中…";
+  // 全店舗の (id, vehicleId, driver, order) を構築
+  const assignments = [];
+  routeResult.forEach(v => {
+    v.stops.forEach((stop, idx) => {
+      assignments.push({
+        id: stop.id,
+        vehicleId: v.id,
+        driver: v.driver,
+        order: idx + 1,
+      });
+    });
+  });
+  try {
+    const res = await apiPost({ action: 'route_assign', assignments });
+    if (res.error) throw new Error(res.error);
+    showToast(`✓ ルートを確定しました（${res.updated}件 更新）`);
+    setTimeout(() => {
+      location.href = `driver.html?date=${currentDate}`;
+    }, 1200);
+  } catch (e) {
+    nextBtn.disabled = false;
+    nextBtn.innerHTML = '✓ このルートで確定';
+    alert("確定に失敗しました：" + e.message);
+  }
+}
+
+// ===== Sheetsから本日の配送先を読込 =====
+async function fetchTodayImports() {
+  const summary = document.getElementById("summaryDetail");
+  summary.textContent = "読み込み中…";
+  try {
+    const url = `${WEBHOOK_URL}?action=route_get&data=${encodeURIComponent(JSON.stringify({ date: currentDate }))}&t=${Date.now()}`;
+    const res = await fetch(url, { cache: 'no-store' });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+    deliveryList = data.routes || [];
+    renderImportSummary();
+  } catch (e) {
+    summary.innerHTML = `<span style="color:#c62828;">読み込み失敗：${e.message}</span>`;
+    deliveryList = [];
+    renderImportSummary();
+  }
+}
+
+function renderImportSummary() {
+  const summary = document.getElementById("summaryDetail");
+  const dateLabel = formatJpDate(currentDate);
+  if (deliveryList.length === 0) {
+    summary.innerHTML = `${dateLabel}の配送先はまだ取り込まれていません`;
+    // 空のときは「取込画面へ」案内を画面に追加
+    insertEmptyHint();
+    return;
+  }
+  removeEmptyHint();
+  // エリア別件数
+  const areaCount = {};
+  deliveryList.forEach(d => {
+    const a = deriveArea(d.address);
+    areaCount[a] = (areaCount[a] || 0) + 1;
+  });
+  const breakdown = Object.entries(areaCount).map(([a, n]) => `${a} ${n}件`).join('・');
+  summary.innerHTML = `${dateLabel} <strong>${deliveryList.length}</strong> 件（${breakdown}）`;
+}
+
+function insertEmptyHint() {
+  if (document.getElementById('importsEmpty')) return;
+  const sb = document.getElementById('summaryBox');
+  const hint = document.createElement('div');
+  hint.id = 'importsEmpty';
+  hint.className = 'imports-empty';
+  hint.innerHTML = `
+    <div class="imports-empty-icon">📭</div>
+    <div class="imports-empty-title">配送先が取り込まれていません</div>
+    <div class="imports-empty-desc">取込画面でCSV/PDFから配送リストを登録してください</div>
+    <a href="import.html?date=${currentDate}" class="imports-empty-btn">取込画面へ</a>`;
+  sb.parentNode.insertBefore(hint, sb.nextSibling);
+}
+function removeEmptyHint() {
+  const e = document.getElementById('importsEmpty');
+  if (e) e.remove();
+}
+
+function reloadImports() {
+  fetchTodayImports();
 }
 
 // ===== ルート最適化（シミュレーション） =====
@@ -1050,42 +1176,40 @@ function setCalcStep(n, state) {
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
 function distributeByArea() {
-  // エリアごとにグルーピング
+  // エリアごとにグルーピング（addressから推定）
   const byArea = {};
   deliveryList.forEach(d => {
-    if (!byArea[d.area]) byArea[d.area] = [];
-    byArea[d.area].push(d);
+    const area = deriveArea(d.address);
+    if (!byArea[area]) byArea[area] = [];
+    byArea[area].push(d);
   });
 
   // 車両ごとの格納箱
   const buckets = vehicles.map(v => ({ ...v, stops: [] }));
 
-  // エリアごとに最も少ない車両に割り当て（均等化）
-  const areas = Object.keys(byArea);
-  areas.forEach(area => {
-    // 岡崎・豊田は遠いのでなるべく同じ車にまとめる
-    const stops = byArea[area];
-    // 最も件数の少ない車両を選ぶ
-    stops.forEach((stop, idx) => {
-      if (options.area && idx === 0) {
-        // エリアの最初の店舗は最も空いてる車へ
-        buckets.sort((a, b) => a.stops.length - b.stops.length);
-      }
+  // エリアごとに最も少ない車両に割り当て（均等化 / 同エリアは同車両に集中）
+  Object.values(byArea).forEach(stops => {
+    if (options.area) {
+      // エリア全体を最も空いてる車に集中
       buckets.sort((a, b) => a.stops.length - b.stops.length);
-      buckets[0].stops.push(stop);
-    });
+      stops.forEach(stop => buckets[0].stops.push(stop));
+    } else {
+      // ラウンドロビン的に均等化
+      stops.forEach(stop => {
+        buckets.sort((a, b) => a.stops.length - b.stops.length);
+        buckets[0].stops.push(stop);
+      });
+    }
   });
 
   // 各車両内で時間順にソート
   if (options.time) {
     buckets.forEach(b => {
-      b.stops.sort((a, b) => {
-        return timeToMinutes(a.time) - timeToMinutes(b.time);
-      });
+      b.stops.sort((x, y) => timeToMinutes(x.scheduledTime) - timeToMinutes(y.scheduledTime));
     });
   }
 
-  // 車両番号順に並び替えて返す
+  // 車両番号順
   buckets.sort((a, b) => a.id - b.id);
   return buckets;
 }
@@ -1103,9 +1227,9 @@ function renderResults() {
     `${vehicles.length}台の車両で ${total}件 の配送先を回ります`;
 
   el.innerHTML = routeResult.map((v, vi) => {
-    const firstTime = v.stops[0]?.time || "—";
-    const lastTime = v.stops[v.stops.length - 1]?.time || "—";
-    const areas = [...new Set(v.stops.map(s => s.area))];
+    const firstTime = v.stops[0]?.scheduledTime || "—";
+    const lastTime = v.stops[v.stops.length - 1]?.scheduledTime || "—";
+    const areas = [...new Set(v.stops.map(s => deriveArea(s.address)))];
     return `
       <div class="result-vehicle" data-vi="${vi}">
         <div class="result-vehicle-head v${v.id}" onclick="toggleVehicle(${vi})">
@@ -1135,10 +1259,10 @@ function renderResults() {
             <div class="result-stop" data-vi="${vi}" data-si="${si}" draggable="true">
               <div class="result-stop-num">${si + 1}</div>
               <div class="result-stop-body">
-                <div class="result-stop-name">${s.name}</div>
+                <div class="result-stop-name">${s.name || '(店舗名未入力)'}</div>
                 <div class="result-stop-meta">
-                  <span class="result-stop-time">⏰ ${s.time}</span>
-                  <span class="result-stop-area">${s.area}</span>
+                  ${s.scheduledTime ? `<span class="result-stop-time">⏰ ${s.scheduledTime}</span>` : ''}
+                  <span class="result-stop-area">${deriveArea(s.address)}</span>
                 </div>
               </div>
               <button class="result-stop-move" onclick="moveStopPrompt(${vi}, ${si})">移動</button>
@@ -1182,7 +1306,7 @@ function moveStopPrompt(vi, si) {
   // 移動
   routeResult[vi].stops.splice(si, 1);
   targetV.stops.push(stop);
-  targetV.stops.sort((a, b) => timeToMinutes(a.time) - timeToMinutes(b.time));
+  targetV.stops.sort((a, b) => timeToMinutes(a.scheduledTime) - timeToMinutes(b.scheduledTime));
   renderResults();
   showToast(`✓ 「${stop.name}」を${targetId}号車に移動`);
 }
@@ -1236,6 +1360,7 @@ function showToast(msg) {
 // 初期化
 initVehicles(vehicleCount);
 updateFooter();
+fetchTodayImports();
 </script>
 
 </body>

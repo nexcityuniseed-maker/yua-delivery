@@ -804,6 +804,111 @@ body {
   transform: translateX(-50%) translateY(0);
 }
 
+/* 車両情報バー（ヘッダー内） */
+.vehicle-info {
+  background: rgba(255,255,255,0.15);
+  border: 1px solid rgba(255,255,255,0.3);
+  border-radius: 10px;
+  padding: 10px 14px;
+  margin: 12px 0 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: white;
+}
+.vehicle-info-badge {
+  background: white;
+  color: #1a5fb4;
+  padding: 4px 12px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 2px;
+  flex-shrink: 0;
+}
+.vehicle-info-num { font-size: 22px; font-weight: 900; }
+.vehicle-info-label { font-size: 13px; font-weight: 700; }
+.vehicle-info-driver {
+  flex: 1;
+  font-size: 17px;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.vehicle-info-change {
+  background: rgba(255,255,255,0.2);
+  border: 1px solid rgba(255,255,255,0.4);
+  color: white;
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+/* 車両選択モーダル */
+.vehicle-pick {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px;
+  background: white;
+  border: 2px solid #ddd;
+  border-radius: 12px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+  transition: border-color 0.15s, transform 0.1s;
+}
+.vehicle-pick:hover { border-color: #1a5fb4; }
+.vehicle-pick:active { transform: scale(0.98); }
+.vp-badge {
+  background: #1a5fb4;
+  color: white;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+.vp-info { flex: 1; min-width: 0; }
+.vp-driver { font-size: 17px; font-weight: 700; margin-bottom: 4px; }
+.vp-count { font-size: 13px; color: #666; }
+.vp-arrow { font-size: 24px; color: #999; flex-shrink: 0; }
+.vs-empty {
+  text-align: center;
+  padding: 30px 20px;
+}
+.vs-empty-icon { font-size: 48px; margin-bottom: 10px; }
+.vs-empty-title { font-size: 18px; font-weight: 700; margin-bottom: 6px; }
+.vs-empty-desc { font-size: 14px; color: #666; margin-bottom: 20px; }
+.vs-empty-btn {
+  display: inline-block;
+  background: #1a5fb4;
+  color: white;
+  padding: 12px 24px;
+  border-radius: 10px;
+  text-decoration: none;
+  font-weight: 700;
+}
+.vs-empty-skip {
+  display: block;
+  margin-top: 14px;
+  background: none;
+  border: none;
+  color: #1a5fb4;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
 /* 同期バー */
 .sync-bar {
   background: #e8f5e9;
@@ -1043,6 +1148,13 @@ body {
     <div class="header-title" style="margin:0;">🚚 今日の配送</div>
   </div>
   <div class="header-date" id="dateText">2026年4月17日（金）</div>
+  <div class="vehicle-info" id="vehicleInfo" style="display:none;">
+    <div class="vehicle-info-badge">
+      <span class="vehicle-info-num" id="vehicleNum">1</span><span class="vehicle-info-label">号車</span>
+    </div>
+    <div class="vehicle-info-driver" id="vehicleDriver">山田さん</div>
+    <button class="vehicle-info-change" onclick="openVehicleSelector()">変更</button>
+  </div>
   <div class="progress-row">
     <div class="progress-text"><span class="done-num" id="doneNum">3</span> / <span id="totalNum">12</span></div>
     <div class="progress-bar">
@@ -1189,11 +1301,27 @@ body {
   </div>
 </div>
 
+<!-- 車両選択モーダル -->
+<div class="modal-bg" id="vehicleSelectorModal" style="z-index:250;">
+  <div class="modal" style="max-height:80vh;">
+    <div class="modal-head">
+      <div class="modal-title">どの車両ですか？</div>
+      <button class="modal-close" id="vehicleSelectorClose" onclick="closeVehicleSelector()" style="display:none;">✕</button>
+    </div>
+    <div style="padding: 20px;" id="vehicleSelectorBody">
+      <div style="text-align:center;color:#666;padding:30px;">読み込み中…</div>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"><span id="toastText"></span></div>
 
 <script>
 const WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbwuHYmihka05oGdxfs7gFNeeqTFvE49aO7WD8Wu0f0mVELr4yxUiPZgtnAE-hLtgWXW/exec";
 const SHOPS_CACHE_KEY = "yua_shops_cache_v1";
+const ROUTE_CACHE_KEY = "yua_route_cache_v1";
+const VEHICLE_KEY = "yua_last_vehicle";
+const HOMEBASE_ADDRESS = "愛知県名古屋市昭和区小坂町一丁目12番地3";
 
 const PLACES = {
   entrance: { icon: "🚪", label: "お店の入口に置く", short: "入口" },
@@ -1205,19 +1333,7 @@ const PLACES = {
 };
 
 let shops = [];
-
-let route = [
-  { shopId: 1, time: "9:00", done: true },
-  { shopId: 2, time: "9:40", done: true },
-  { shopId: 3, time: "10:20", done: true },
-  { shopId: 4, time: "11:30", done: false },
-  { shopId: 5, time: "12:15", done: false },
-  { shopId: 6, time: "13:00", done: false },
-  { shopId: 7, time: "13:45", done: false },
-  { shopId: 8, time: "14:20", done: false },
-  { shopId: 9, time: "15:30", done: false },
-  { shopId: 10, time: "17:00", done: false },
-];
+let route = [];
 
 let currentView = "route";
 let currentFilter = "all";
@@ -1225,8 +1341,58 @@ let currentSearch = "";
 let editingId = null;
 let selectedPlace = null;
 let selectedDays = [];
+let currentDate = todayStr();
+let currentVehicleId = null;
+let currentDriver = "";
+
+function todayStr() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function formatJpDate(dateStr) {
+  if (!dateStr || !/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return '';
+  const [y, m, d] = dateStr.split('-').map(n => parseInt(n));
+  const dow = ['日','月','火','水','木','金','土'][new Date(y, m - 1, d).getDay()];
+  return `${y}年${m}月${d}日（${dow}）`;
+}
+function readVehicleParams() {
+  const params = new URLSearchParams(location.search);
+  const v = params.get('v');
+  const dt = params.get('date');
+  if (dt && /^\d{4}-\d{2}-\d{2}$/.test(dt)) currentDate = dt;
+  if (v) {
+    currentVehicleId = parseInt(v);
+    if (!isNaN(currentVehicleId)) localStorage.setItem(VEHICLE_KEY, String(currentVehicleId));
+    else currentVehicleId = null;
+  } else {
+    const stored = localStorage.getItem(VEHICLE_KEY);
+    if (stored) {
+      const n = parseInt(stored);
+      if (!isNaN(n)) currentVehicleId = n;
+    }
+  }
+}
 
 function getShop(id) { return shops.find(s => s.id === id); }
+
+// route項目の表示用情報を生成（route項目+店舗マスタを統合）
+function getRouteDisplay(r) {
+  const shop = getShop(r.shopId);
+  return {
+    id: r.id,
+    name: r.name || (shop && shop.name) || '(店舗名未入力)',
+    address: r.address || (shop && shop.address) || '',
+    tel: (shop && shop.tel) || '',
+    place: (shop && shop.place) || 'entrance',
+    note: r.note || (shop && shop.note) || '',
+    items: r.items || (shop && shop.items) || '',
+    qty: r.qty || '',
+    time: r.scheduledTime || '',
+    done: r.status === 'done',
+    shopId: r.shopId,
+    hasShop: !!shop,
+  };
+}
 
 // ============================================================
 // Google Sheets API
@@ -1314,56 +1480,69 @@ function setSyncStatus(state, message) {
 }
 
 function renderHeader() {
-  const done = route.filter(r => r.done).length;
+  const done = route.filter(r => r.status === 'done').length;
   const total = route.length;
   const pct = total > 0 ? Math.round((done / total) * 100) : 0;
   document.getElementById("doneNum").textContent = done;
   document.getElementById("totalNum").textContent = total;
   document.getElementById("progressFill").style.width = pct + "%";
+  const dateText = document.getElementById("dateText");
+  if (dateText) dateText.textContent = formatJpDate(currentDate) || dateText.textContent;
 }
 
 function renderNext() {
   const c = document.getElementById("nextCardContainer");
-  // shopsがまだ読み込まれていない場合
-  if (shops.length === 0) {
+  const label = document.querySelector('.next-label');
+  // 車両未選択
+  if (!currentVehicleId) {
     c.innerHTML = `
       <div class="all-done">
-        <div class="all-done-icon">⏳</div>
-        <div class="all-done-title">配送先を読み込み中…</div>
-        <div class="all-done-msg">Google スプレッドシートから取得しています</div>
+        <div class="all-done-icon">🚛</div>
+        <div class="all-done-title">車両を選んでください</div>
+        <div class="all-done-msg"><button onclick="openVehicleSelector()" style="margin-top:14px;background:#1a5fb4;color:white;border:none;padding:14px 28px;border-radius:10px;font-family:inherit;font-size:17px;font-weight:700;cursor:pointer;">車両を選ぶ</button></div>
       </div>`;
-    document.querySelector('.next-label').style.display = 'none';
+    if (label) label.style.display = 'none';
     return;
   }
-  // 店舗が紐づく未完了の最初の項目を探す
-  const idx = route.findIndex(r => !r.done && getShop(r.shopId));
+  // ルート未取得
+  if (route.length === 0) {
+    c.innerHTML = `
+      <div class="all-done">
+        <div class="all-done-icon">📭</div>
+        <div class="all-done-title">本日の配送はありません</div>
+        <div class="all-done-msg">${formatJpDate(currentDate)}の${currentVehicleId}号車のルートが見つかりません<br><small style="color:#999;font-size:14px;">取込→ルート作成を済ませてください</small></div>
+      </div>`;
+    if (label) label.style.display = 'none';
+    return;
+  }
+  // 未完了の最初の項目
+  const idx = route.findIndex(r => r.status !== 'done');
   if (idx === -1) {
-    const remaining = route.filter(r => !r.done && !getShop(r.shopId)).length;
     c.innerHTML = `
       <div class="all-done">
         <div class="all-done-icon">🎉</div>
         <div class="all-done-title">すべて完了しました！</div>
-        <div class="all-done-msg">本日もお疲れさまでした${remaining ? `<br><small style="color:#999;font-size:14px;">（店舗マスタに無いため${remaining}件は表示できません）</small>` : ''}</div>
+        <div class="all-done-msg">本日もお疲れさまでした</div>
       </div>`;
-    document.querySelector('.next-label').style.display = 'none';
+    if (label) label.style.display = 'none';
     return;
   }
-  document.querySelector('.next-label').style.display = 'block';
+  if (label) label.style.display = 'block';
   const r = route[idx];
-  const s = getShop(r.shopId);
-  const place = PLACES[s.place] || PLACES.entrance;
+  const d = getRouteDisplay(r);
+  const place = PLACES[d.place] || PLACES.entrance;
   c.innerHTML = `
     <div class="next-card">
       <div class="next-top">
         <div class="next-num">${idx+1}</div>
         <div>
           <div class="next-of"><span class="next-of-num">${idx+1}</span> / ${route.length} 件目</div>
-          <div style="font-size:15px;opacity:.9;">目安 ${r.time} 頃</div>
+          ${d.time ? `<div style="font-size:15px;opacity:.9;">目安 ${d.time} 頃</div>` : ''}
         </div>
       </div>
       <div class="next-body">
-        <div class="next-name">${s.name}</div>
-        <div class="next-address">📍 ${s.address}</div>
+        <div class="next-name">${d.name}</div>
+        ${d.address ? `<div class="next-address">📍 ${d.address}</div>` : ''}
 
         <div class="delivery-box">
           <div class="delivery-label">納品する場所</div>
@@ -1371,48 +1550,47 @@ function renderNext() {
             <div class="delivery-icon">${place.icon}</div>
             <div class="delivery-where">${place.label}</div>
           </div>
-          ${s.note ? `<div class="delivery-note">${s.note}</div>` : ''}
+          ${d.note ? `<div class="delivery-note">${d.note}</div>` : ''}
         </div>
 
         <div class="info-row">
           <div class="info-item">
             <div class="info-item-label">商品</div>
-            <div class="info-item-value">${s.items || '—'}</div>
+            <div class="info-item-value">${d.items || '—'}${d.qty ? ` × ${d.qty}` : ''}</div>
           </div>
         </div>
 
         <div class="btn-row">
           <button class="big-btn btn-nav" onclick="openNav()">
-            <span class="btn-icon">🗺️</span>地図で道案内
+            <span class="btn-icon">🗺️</span>地図で道案内（残り${route.filter(r => r.status !== 'done').length}件）
           </button>
-          <button class="big-btn btn-done" onclick="markDone()">
+          <button class="big-btn btn-done" onclick="markDone(${r.id})">
             <span class="btn-icon">✓</span>配送が終わりました
           </button>
         </div>
-        ${s.tel ? `<button class="btn-call" onclick="callShop()">📞 お店に電話する (${s.tel})</button>` : ''}
+        ${d.tel ? `<button class="btn-call" onclick="callShop()">📞 お店に電話する (${d.tel})</button>` : ''}
       </div>
     </div>`;
 }
 
 function renderRouteList() {
   const listEl = document.getElementById("stopList");
-  if (shops.length === 0) {
-    listEl.innerHTML = `<div style="text-align:center;padding:30px 20px;color:#999;font-size:15px;">読み込み中…</div>`;
+  if (!currentVehicleId || route.length === 0) {
+    listEl.innerHTML = '';
     return;
   }
   listEl.innerHTML = route.map((r, i) => {
-    const s = getShop(r.shopId);
-    if (!s) return '';
-    const place = PLACES[s.place] || PLACES.entrance;
+    const d = getRouteDisplay(r);
+    const place = PLACES[d.place] || PLACES.entrance;
     return `
-      <div class="list-card ${r.done ? 'done' : ''}" data-index="${i}" draggable="${!r.done}">
+      <div class="list-card ${d.done ? 'done' : ''}" data-index="${i}" draggable="${!d.done}">
         <div class="list-handle" data-drag="true">≡</div>
         <div class="list-num"><span class="num-text">${i+1}</span></div>
         <div class="list-body" onclick="toggleDone(${i})">
-          <div class="list-name">${s.name}</div>
+          <div class="list-name">${d.name}</div>
           <div class="list-meta">
             <span class="list-place">${place.icon} ${place.short}</span>
-            <span class="list-time">⏰ ${r.time}</span>
+            ${d.time ? `<span class="list-time">⏰ ${d.time}</span>` : ''}
           </div>
         </div>
       </div>`;
@@ -1496,39 +1674,78 @@ document.querySelectorAll(".filter-btn").forEach(p => {
 });
 
 function nextActiveIndex() {
-  return route.findIndex(r => !r.done && getShop(r.shopId));
+  return route.findIndex(r => r.status !== 'done');
 }
+// 残り全店舗を waypoints に渡してGoogle Mapsで道案内
 function openNav() {
-  const idx = nextActiveIndex();
-  if (idx === -1) return;
-  const s = getShop(route[idx].shopId);
-  const origin = encodeURIComponent('愛知県名古屋市昭和区小坂町一丁目12番地3');
-  const destination = encodeURIComponent(s.address);
-  window.open(`https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${destination}&travelmode=driving`, '_blank');
+  const remaining = route.filter(r => r.status !== 'done');
+  if (remaining.length === 0) return;
+  const origin = encodeURIComponent(HOMEBASE_ADDRESS);
+  // 残り店舗の住所を取得（route項目→店舗マスタの順で）
+  const addresses = remaining.map(r => {
+    const d = getRouteDisplay(r);
+    return d.address;
+  }).filter(a => a && a.trim());
+  if (addresses.length === 0) {
+    showToast("⚠️ 住所が登録されていません");
+    return;
+  }
+  // Maps URL は waypoints 上限9件 + destination 1件 = 最大10店舗まで
+  const stops = addresses.slice(0, 10);
+  const destination = encodeURIComponent(stops[stops.length - 1]);
+  let url = `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${destination}&travelmode=driving`;
+  if (stops.length > 1) {
+    const wp = stops.slice(0, -1).map(a => encodeURIComponent(a)).join('|');
+    url += `&waypoints=${wp}`;
+  }
+  if (addresses.length > 10) {
+    showToast(`⚠️ 残り${addresses.length}件のうち、最初の10件のみ案内します`);
+  }
+  window.open(url, '_blank');
 }
-function markDone() {
-  const idx = nextActiveIndex();
+async function markDone(routeId) {
+  const idx = route.findIndex(r => r.id === routeId);
   if (idx === -1) return;
-  if (!confirm(`「${getShop(route[idx].shopId).name}」の配送が\n完了しましたか？`)) return;
-  route[idx].done = true;
-  showToast("✓ 配送完了しました");
+  const d = getRouteDisplay(route[idx]);
+  if (!confirm(`「${d.name}」の配送が\n完了しましたか？`)) return;
+  // 楽観更新：先に画面を更新
+  route[idx].status = 'done';
+  route[idx].completedAt = new Date().toISOString();
   renderRoute();
+  showToast("✓ 配送完了しました");
+  try {
+    const res = await apiPost({ action: 'route_status', id: routeId, status: 'done' });
+    if (res.error) throw new Error(res.error);
+  } catch (e) {
+    // ロールバック
+    route[idx].status = 'pending';
+    route[idx].completedAt = '';
+    renderRoute();
+    showToast("⚠️ 完了の保存失敗：" + e.message);
+  }
 }
-function toggleDone(i) {
-  if (route[i].done) {
-    const s = getShop(route[i].shopId);
-    if (!s) return;
-    if (confirm(`「${s.name}」の完了を\n取り消しますか？`)) {
-      route[i].done = false;
-      renderRoute();
-    }
+async function toggleDone(i) {
+  if (route[i].status !== 'done') return;
+  const d = getRouteDisplay(route[i]);
+  if (!confirm(`「${d.name}」の完了を\n取り消しますか？`)) return;
+  const id = route[i].id;
+  route[i].status = 'pending';
+  route[i].completedAt = '';
+  renderRoute();
+  try {
+    const res = await apiPost({ action: 'route_status', id, status: 'pending' });
+    if (res.error) throw new Error(res.error);
+  } catch (e) {
+    route[i].status = 'done';
+    renderRoute();
+    showToast("⚠️ 取消失敗：" + e.message);
   }
 }
 function callShop() {
   const idx = nextActiveIndex();
   if (idx === -1) return;
-  const s = getShop(route[idx].shopId);
-  if (s.tel) location.href = `tel:${s.tel.replace(/[^0-9+]/g, '')}`;
+  const d = getRouteDisplay(route[idx]);
+  if (d.tel) location.href = `tel:${d.tel.replace(/[^0-9+]/g, '')}`;
 }
 
 function openAddModal() {
@@ -1648,8 +1865,135 @@ async function deleteShop() {
 async function syncNow() {
   try {
     await fetchShops();
+    if (currentVehicleId) await fetchTodayRoute();
     showToast("✓ 最新の情報に更新しました");
   } catch (_) { /* fetchShops側でトースト出済み */ }
+}
+
+// ============================================================
+// 今日のルート取得
+// ============================================================
+async function fetchTodayRoute() {
+  if (!currentVehicleId) return;
+  try {
+    const url = `${WEBHOOK_URL}?action=route_get&data=${encodeURIComponent(JSON.stringify({ date: currentDate, vehicleId: currentVehicleId }))}&t=${Date.now()}`;
+    const res = await fetch(url, { cache: 'no-store' });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+    route = (data.routes || []).slice().sort((a, b) => (a.order || 0) - (b.order || 0));
+    if (route.length && route[0].driver) currentDriver = route[0].driver;
+    saveRouteCache();
+    updateVehicleInfo();
+    renderRoute();
+  } catch (e) {
+    const cached = loadRouteCache();
+    if (cached) {
+      route = cached.route;
+      renderRoute();
+      showToast(`⚠️ オフライン表示中（${e.message}）`);
+    } else {
+      showToast(`⚠️ ルート取得失敗：${e.message}`);
+    }
+  }
+}
+
+function saveRouteCache() {
+  try {
+    localStorage.setItem(ROUTE_CACHE_KEY, JSON.stringify({
+      date: currentDate, vehicleId: currentVehicleId, route, savedAt: Date.now()
+    }));
+  } catch (_) {}
+}
+function loadRouteCache() {
+  try {
+    const raw = localStorage.getItem(ROUTE_CACHE_KEY);
+    if (!raw) return null;
+    const obj = JSON.parse(raw);
+    if (obj.date !== currentDate || obj.vehicleId !== currentVehicleId) return null;
+    return obj;
+  } catch (_) { return null; }
+}
+
+// ============================================================
+// 車両選択
+// ============================================================
+function updateVehicleInfo() {
+  const info = document.getElementById('vehicleInfo');
+  if (!currentVehicleId) {
+    info.style.display = 'none';
+    return;
+  }
+  info.style.display = 'flex';
+  document.getElementById('vehicleNum').textContent = currentVehicleId;
+  document.getElementById('vehicleDriver').textContent = currentDriver || '（ドライバー未入力）';
+}
+
+async function openVehicleSelector() {
+  const modal = document.getElementById('vehicleSelectorModal');
+  const body = document.getElementById('vehicleSelectorBody');
+  const closeBtn = document.getElementById('vehicleSelectorClose');
+  closeBtn.style.display = currentVehicleId ? 'block' : 'none';
+  modal.classList.add('show');
+  body.innerHTML = `<div style="text-align:center;color:#666;padding:30px;">読み込み中…</div>`;
+  try {
+    const url = `${WEBHOOK_URL}?action=route_get&data=${encodeURIComponent(JSON.stringify({ date: currentDate }))}&t=${Date.now()}`;
+    const res = await fetch(url, { cache: 'no-store' });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+    const routes = data.routes || [];
+    const byVehicle = {};
+    routes.forEach(r => {
+      const v = parseInt(r.vehicleId);
+      if (!v || v <= 0) return;
+      if (!byVehicle[v]) byVehicle[v] = { vehicleId: v, driver: r.driver || '', count: 0, done: 0 };
+      byVehicle[v].count++;
+      if (r.status === 'done') byVehicle[v].done++;
+      if (!byVehicle[v].driver && r.driver) byVehicle[v].driver = r.driver;
+    });
+    const vehicles = Object.values(byVehicle).sort((a, b) => a.vehicleId - b.vehicleId);
+    if (vehicles.length === 0) {
+      body.innerHTML = `
+        <div class="vs-empty">
+          <div class="vs-empty-icon">📭</div>
+          <div class="vs-empty-title">${formatJpDate(currentDate)} のルートがまだありません</div>
+          <div class="vs-empty-desc">取込→ルート作成を先に済ませてください</div>
+          <a href="route.html" class="vs-empty-btn">ルート作成へ</a>
+        </div>`;
+      return;
+    }
+    body.innerHTML = vehicles.map(v => `
+      <button class="vehicle-pick" onclick="pickVehicle(${v.vehicleId}, ${JSON.stringify(v.driver).replace(/"/g, '&quot;')})">
+        <div class="vp-badge">${v.vehicleId}号車</div>
+        <div class="vp-info">
+          <div class="vp-driver">${v.driver || '(ドライバー未入力)'}</div>
+          <div class="vp-count">${v.count}件 · 完了 ${v.done}/${v.count}</div>
+        </div>
+        <div class="vp-arrow">→</div>
+      </button>
+    `).join('');
+  } catch (e) {
+    body.innerHTML = `
+      <div class="vs-empty">
+        <div class="vs-empty-icon">⚠️</div>
+        <div class="vs-empty-title">読み込み失敗</div>
+        <div class="vs-empty-desc">${e.message}</div>
+        <button class="vs-empty-skip" onclick="openVehicleSelector()">再試行</button>
+      </div>`;
+  }
+}
+
+function pickVehicle(vehicleId, driver) {
+  currentVehicleId = vehicleId;
+  currentDriver = driver || '';
+  localStorage.setItem(VEHICLE_KEY, String(vehicleId));
+  closeVehicleSelector();
+  updateVehicleInfo();
+  fetchTodayRoute();
+}
+
+function closeVehicleSelector() {
+  if (!currentVehicleId) return; // 未選択時は閉じさせない
+  document.getElementById('vehicleSelectorModal').classList.remove('show');
 }
 
 function showToast(msg) {
@@ -1757,12 +2101,30 @@ function reorderRoute(from, to) {
 
 // 起動時：キャッシュがあれば即描画 → Sheetsから最新を取得
 (function init() {
+  // 1. URL params + localStorage から状態を復元
+  readVehicleParams();
+  // 2. shops cache → 即時描画
   const cached = loadCachedShops();
   if (cached && Array.isArray(cached.shops) && cached.shops.length) {
     shops = cached.shops;
   }
+  // 3. route cache（同日・同車両のみ）→ 即時描画
+  const routeCached = loadRouteCache();
+  if (routeCached) {
+    route = routeCached.route;
+    if (route.length && route[0].driver) currentDriver = route[0].driver;
+  }
+  // 4. 初期描画
+  updateVehicleInfo();
   renderRoute();
+  // 5. shopsを背景取得
   fetchShops().catch(() => {});
+  // 6. 車両未選択ならセレクタを開く、選択済みならルート取得
+  if (currentVehicleId) {
+    fetchTodayRoute();
+  } else {
+    openVehicleSelector();
+  }
 })();
 </script>
 

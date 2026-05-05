@@ -931,17 +931,43 @@ body {
 <input type="file" id="fileInputPdf" accept=".pdf,image/*" style="display:none">
 
 <script>
-// ========== 配送先マスタ（既存のデータと想定） ==========
-const SHOP_MASTER = [
-  { id: 1, name: "焼肉大将軍 名駅店", address: "名古屋市中村区名駅4-5-2", tel: "052-111-1111", contact: "山田店長", place: "back", note: "裏のシャッター開いてます" },
-  { id: 2, name: "ラーメン一番星", address: "名古屋市中村区椿町1-3", tel: "052-222-2222", contact: "佐藤オーナー", place: "kitchen", note: "冷蔵庫横まで運んでください" },
-  { id: 3, name: "カフェ ベル", address: "名古屋市中区錦2-10-5", tel: "052-333-3333", contact: "", place: "counter", note: "" },
-  { id: 4, name: "居酒屋まるきん 栄店", address: "名古屋市中区栄3-15-8 サンプルビル1F", tel: "052-444-4444", contact: "鈴木店長", place: "staff", note: "開店前なのでインターホンを鳴らしてください" },
-  { id: 5, name: "寿司処 江戸", address: "名古屋市中区大須2-8-1", tel: "052-555-5555", contact: "", place: "entrance", note: "" },
-  { id: 6, name: "焼き鳥 鳥政", address: "名古屋市中区新栄1-5-3", tel: "052-666-6666", contact: "高橋店長", place: "back", note: "重いので台車を使ってください" },
-  { id: 7, name: "中華料理 龍門", address: "名古屋市東区東桜1-12-4", tel: "052-777-7777", contact: "", place: "kitchen", note: "" },
-  { id: 8, name: "和食 さくら", address: "名古屋市東区葵3-2-1", tel: "052-888-8888", contact: "伊藤女将", place: "storage", note: "2階の倉庫へ" },
-];
+// ========== 設定 ==========
+const WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbwuHYmihka05oGdxfs7gFNeeqTFvE49aO7WD8Wu0f0mVELr4yxUiPZgtnAE-hLtgWXW/exec";
+
+function todayStr() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+async function apiPost(payload) {
+  const url = WEBHOOK_URL
+    + '?action=' + encodeURIComponent(payload.action)
+    + '&data='   + encodeURIComponent(JSON.stringify(payload))
+    + '&t='      + Date.now();
+  const res = await fetch(url, { cache: 'no-store' });
+  return JSON.parse(await res.text());
+}
+
+let currentDate = todayStr();
+(function readParams() {
+  const p = new URLSearchParams(location.search);
+  const dt = p.get('date');
+  if (dt && /^\d{4}-\d{2}-\d{2}$/.test(dt)) currentDate = dt;
+})();
+
+// ========== 配送先マスタ（Sheetsから取得） ==========
+let SHOP_MASTER = [];
+
+async function fetchShopMaster() {
+  try {
+    const res = await fetch(WEBHOOK_URL + '?t=' + Date.now(), { cache: 'no-store' });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+    SHOP_MASTER = data.shops || [];
+  } catch (e) {
+    console.warn('店舗マスタ取得失敗:', e.message);
+    SHOP_MASTER = [];
+  }
+}
 
 const PLACES = {
   entrance: { icon: "🚪", label: "お店の入口に置く", short: "入口" },
@@ -1296,19 +1322,37 @@ function matchAndShowPreview(rows) {
     </div>`;
 }
 
-function confirmImport() {
-  const newRoute = parsedRows
-    .filter(r => r.matchedShop)
-    .map(r => ({
-      shopId: r.matchedShop.id,
-      time: r.time || '',
-      items: [r.items, r.qty].filter(x => x).join(' '),
-      done: false,
-    }));
-  route = newRoute;
-  closeImportModal();
-  showToast(`✓ ${newRoute.length}件の配送先を取り込みました`);
-  renderRoute();
+async function confirmImport() {
+  if (parsedRows.length === 0) return;
+  const items = parsedRows.map(r => ({
+    shopId: r.matchedShop ? r.matchedShop.id : '',
+    name: r.name || '',
+    address: r.matchedShop ? r.matchedShop.address : '',
+    scheduledTime: r.time || '',
+    items: r.items || '',
+    qty: r.qty || '',
+    note: '',
+  }));
+  // モーダル内のボタンをローディング化
+  const saveBtn = document.querySelector('#importModalBody .btn-save');
+  if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = '保存中…'; }
+  try {
+    const res = await apiPost({
+      action: 'route_import',
+      date: currentDate,
+      items: items,
+      replace: true, // 同日の未割当を上書き
+    });
+    if (res.error) throw new Error(res.error);
+    closeImportModal();
+    showToast(`✓ ${res.count || items.length}件を保存しました。ルート作成画面へ移動します…`);
+    setTimeout(() => {
+      location.href = `route.html?date=${currentDate}`;
+    }, 1500);
+  } catch (e) {
+    if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'この内容で取り込む'; }
+    alert("保存に失敗しました：" + e.message);
+  }
 }
 
 // ========== トースト ==========
@@ -1319,8 +1363,11 @@ function showToast(msg) {
   setTimeout(() => t.classList.remove("show"), 2200);
 }
 
-// 初期描画
-renderRoute();
+// 初期化：店舗マスタを取得してから初期描画
+(async function init() {
+  await fetchShopMaster();
+  renderRoute();
+})();
 </script>
 
 </body>

@@ -8,6 +8,9 @@
 const SHEET_NAME = 'shops';
 const HEADERS = ['id', 'name', 'address', 'tel', 'contact', 'place', 'note', 'days', 'time', 'items', 'updatedAt'];
 
+const ROUTE_SHEET = 'route';
+const ROUTE_HEADERS = ['id', 'date', 'vehicleId', 'driver', 'order', 'shopId', 'name', 'address', 'scheduledTime', 'items', 'qty', 'note', 'status', 'completedAt', 'importedAt', 'updatedAt'];
+
 const SEED_DATA = [
   [1,  '焼肉大将軍 名駅店',   '名古屋市中村区名駅4-5-2',           '052-111-1111', '山田店長',     'back',     '裏のシャッター開いてます',                     '1,2,3,4,5',   '10:00〜11:00', '割り箸、おしぼり',     ''],
   [2,  'ラーメン一番星',       '名古屋市中村区椿町1-3',              '052-222-2222', '佐藤オーナー', 'kitchen',  '冷蔵庫横まで運んでください',                   '1,3,5',       '9:00〜10:30',  '麺、スープ原液',       ''],
@@ -65,6 +68,21 @@ function setup() {
   SpreadsheetApp.getUi().alert('✅ セットアップ完了\n\n次はメニューの「デプロイ → 新しいデプロイ → ウェブアプリ」から公開してください。');
 }
 
+// ===== route シート初期化（F機能用：取込→ルート→ドライバーの一気通貫） =====
+// ★この関数も1回だけ実行してください
+function setupRoute() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sheet = ss.getSheetByName(ROUTE_SHEET);
+  if (!sheet) sheet = ss.insertSheet(ROUTE_SHEET);
+  sheet.getRange(1, 1, 1, ROUTE_HEADERS.length).setValues([ROUTE_HEADERS]);
+  sheet.getRange(1, 1, 1, ROUTE_HEADERS.length)
+       .setFontWeight('bold').setBackground('#fce8b2').setHorizontalAlignment('center');
+  sheet.setFrozenRows(1);
+  const widths = [50, 100, 70, 90, 60, 70, 180, 220, 100, 180, 80, 180, 80, 150, 150, 150];
+  widths.forEach((w, i) => sheet.setColumnWidth(i + 1, w));
+  SpreadsheetApp.getUi().alert('✅ route シートを準備しました');
+}
+
 // ===== GET /exec → 全店舗取得 or GETパラメータで書き込み =====
 // ブラウザからのCORS制限を回避するため、書き込みもGETで受け付ける
 function doGet(e) {
@@ -79,6 +97,12 @@ function doGet(e) {
       if (action === 'upsert') return upsertShop(sheet, data.shop);
       if (action === 'delete') return deleteShop(sheet, data.id);
       if (action === 'bulk')   return bulkReplace(sheet, data.shops);
+      // route シート関連
+      if (action === 'route_get')    return routeGet(data);
+      if (action === 'route_import') return routeImport(data);
+      if (action === 'route_assign') return routeAssign(data);
+      if (action === 'route_status') return routeStatus(data);
+      if (action === 'route_clear')  return routeClearDate(data);
       return jsonCors({error: 'Unknown action: ' + action});
     }
 
@@ -106,6 +130,11 @@ function doPost(e) {
     if (action === 'upsert') return upsertShop(sheet, payload.shop);
     if (action === 'delete') return deleteShop(sheet, payload.id);
     if (action === 'bulk')   return bulkReplace(sheet, payload.shops);
+    if (action === 'route_get')    return routeGet(payload);
+    if (action === 'route_import') return routeImport(payload);
+    if (action === 'route_assign') return routeAssign(payload);
+    if (action === 'route_status') return routeStatus(payload);
+    if (action === 'route_clear')  return routeClearDate(payload);
     return jsonCors({error: 'Unknown action: ' + action});
   } catch (err) {
     return jsonCors({error: err.toString()});
@@ -197,4 +226,177 @@ function json(obj) {
 function jsonCors(obj) {
   return ContentService.createTextOutput(JSON.stringify(obj))
     .setMimeType(ContentService.MimeType.JSON);
+}
+
+// ============================================
+// route シート操作（F機能：取込→ルート→ドライバー）
+// ============================================
+function getRouteSheet_() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  return ss.getSheetByName(ROUTE_SHEET);
+}
+
+function rowToRoute_(headers, row) {
+  const obj = {};
+  headers.forEach((h, i) => { obj[h] = row[i]; });
+  ['id', 'vehicleId', 'order', 'shopId'].forEach(k => {
+    if (obj[k] === '' || obj[k] === null || obj[k] === undefined) {
+      if (k === 'shopId') obj[k] = '';
+      else if (k === 'vehicleId') obj[k] = 0;
+      else obj[k] = null;
+    } else if (typeof obj[k] === 'string' && /^\d+$/.test(obj[k])) {
+      obj[k] = parseInt(obj[k]);
+    } else if (typeof obj[k] === 'number') {
+      obj[k] = obj[k];
+    }
+  });
+  return obj;
+}
+
+function routeToRow_(headers, route) {
+  return headers.map(h => route[h] !== undefined && route[h] !== null ? route[h] : '');
+}
+
+function routeGet(data) {
+  const sheet = getRouteSheet_();
+  if (!sheet) return jsonCors({error: 'route sheet not found. Run setupRoute() first.'});
+  const values = sheet.getDataRange().getValues();
+  if (values.length < 2) return jsonCors({routes: [], count: 0});
+  const headers = values[0];
+  let rows = values.slice(1)
+    .filter(r => r[0] !== '' && r[0] !== null)
+    .map(r => rowToRoute_(headers, r));
+  if (data && data.date) rows = rows.filter(r => r.date === data.date);
+  if (data && data.vehicleId !== undefined && data.vehicleId !== null && data.vehicleId !== '') {
+    const vid = parseInt(data.vehicleId);
+    rows = rows.filter(r => parseInt(r.vehicleId) === vid);
+  }
+  // 並び順: vehicleId → order
+  rows.sort((a, b) => (a.vehicleId - b.vehicleId) || (a.order - b.order));
+  return jsonCors({routes: rows, count: rows.length});
+}
+
+function routeImport(data) {
+  const sheet = getRouteSheet_();
+  if (!sheet) return jsonCors({error: 'route sheet not found'});
+  const date = data && data.date;
+  const items = (data && data.items) || [];
+  const replace = !!(data && data.replace);
+  if (!date) return jsonCors({error: 'date required'});
+
+  // replace=true なら同じ日付の vehicleId=0（未割当）を先に消す
+  if (replace) {
+    const values = sheet.getDataRange().getValues();
+    const headers = values[0];
+    const dateCol = headers.indexOf('date');
+    const vidCol = headers.indexOf('vehicleId');
+    const rowsToDelete = [];
+    for (let i = 1; i < values.length; i++) {
+      if (values[i][dateCol] === date && parseInt(values[i][vidCol]) === 0) {
+        rowsToDelete.push(i + 1);
+      }
+    }
+    // 後ろから消す
+    rowsToDelete.reverse().forEach(r => sheet.deleteRow(r));
+  }
+
+  const values2 = sheet.getDataRange().getValues();
+  const headers2 = values2[0];
+  let maxId = 0;
+  for (let i = 1; i < values2.length; i++) {
+    const v = parseInt(values2[i][0]);
+    if (!isNaN(v) && v > maxId) maxId = v;
+  }
+  const now = new Date().toISOString();
+  const newRows = items.map((it, idx) => {
+    const r = Object.assign({
+      date: date,
+      vehicleId: 0,
+      driver: '',
+      order: idx + 1,
+      shopId: '',
+      name: '',
+      address: '',
+      scheduledTime: '',
+      items: '',
+      qty: '',
+      note: '',
+      status: 'pending',
+      completedAt: '',
+      importedAt: now,
+      updatedAt: now,
+    }, it);
+    r.id = ++maxId;
+    return routeToRow_(headers2, r);
+  });
+  if (newRows.length) {
+    sheet.getRange(sheet.getLastRow() + 1, 1, newRows.length, headers2.length).setValues(newRows);
+  }
+  return jsonCors({ok: true, count: newRows.length});
+}
+
+function routeAssign(data) {
+  const sheet = getRouteSheet_();
+  if (!sheet) return jsonCors({error: 'route sheet not found'});
+  const assignments = (data && data.assignments) || [];
+  if (!assignments.length) return jsonCors({ok: true, updated: 0});
+
+  const values = sheet.getDataRange().getValues();
+  const headers = values[0];
+  const idCol = headers.indexOf('id');
+  const now = new Date().toISOString();
+  const idMap = {};
+  for (let i = 1; i < values.length; i++) {
+    idMap[String(values[i][idCol])] = i;
+  }
+  let updated = 0;
+  assignments.forEach(a => {
+    const rowIdx = idMap[String(a.id)];
+    if (rowIdx === undefined) return;
+    const existing = rowToRoute_(headers, values[rowIdx]);
+    const merged = Object.assign({}, existing, a, { updatedAt: now });
+    const row = routeToRow_(headers, merged);
+    sheet.getRange(rowIdx + 1, 1, 1, headers.length).setValues([row]);
+    updated++;
+  });
+  return jsonCors({ok: true, updated: updated});
+}
+
+function routeStatus(data) {
+  const sheet = getRouteSheet_();
+  if (!sheet) return jsonCors({error: 'route sheet not found'});
+  if (!data || data.id === undefined || data.id === null) return jsonCors({error: 'id required'});
+  const values = sheet.getDataRange().getValues();
+  const headers = values[0];
+  const idCol = headers.indexOf('id');
+  const statusCol = headers.indexOf('status');
+  const completedAtCol = headers.indexOf('completedAt');
+  const updatedAtCol = headers.indexOf('updatedAt');
+  for (let i = 1; i < values.length; i++) {
+    if (String(values[i][idCol]) === String(data.id)) {
+      const status = data.status || 'pending';
+      const now = new Date().toISOString();
+      sheet.getRange(i + 1, statusCol + 1).setValue(status);
+      sheet.getRange(i + 1, completedAtCol + 1).setValue(status === 'done' ? (data.completedAt || now) : '');
+      sheet.getRange(i + 1, updatedAtCol + 1).setValue(now);
+      return jsonCors({ok: true, id: data.id, status: status});
+    }
+  }
+  return jsonCors({error: 'Not found', id: data.id});
+}
+
+function routeClearDate(data) {
+  const sheet = getRouteSheet_();
+  if (!sheet) return jsonCors({error: 'route sheet not found'});
+  const date = data && data.date;
+  if (!date) return jsonCors({error: 'date required'});
+  const values = sheet.getDataRange().getValues();
+  const headers = values[0];
+  const dateCol = headers.indexOf('date');
+  const rowsToDelete = [];
+  for (let i = 1; i < values.length; i++) {
+    if (values[i][dateCol] === date) rowsToDelete.push(i + 1);
+  }
+  rowsToDelete.reverse().forEach(r => sheet.deleteRow(r));
+  return jsonCors({ok: true, deleted: rowsToDelete.length});
 }
