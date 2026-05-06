@@ -25,52 +25,106 @@ body {
   line-height: 1.5;
 }
 
-/* ======== ヘッダー ======== */
+/* ======== ヘッダー（コンパクト） ======== */
 .header {
   background: #1a5fb4;
   color: white;
-  padding: 20px;
+  padding: 14px 16px 16px;
 }
-.header-title {
+.header-top-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.header-back {
+  color: white;
+  text-decoration: none;
   font-size: 22px;
-  font-weight: 700;
-  margin-bottom: 4px;
+  background: rgba(255,255,255,0.2);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
 }
+.header-info { flex: 1; min-width: 0; }
 .header-date {
-  font-size: 16px;
+  font-size: 15px;
   opacity: 0.9;
-  margin-bottom: 16px;
+  margin-bottom: 2px;
+}
+.header-driver {
+  font-size: 18px;
+  font-weight: 800;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+.header-driver .vehicle-info-num {
+  font-size: 24px;
+  font-weight: 900;
+  background: white;
+  color: #1a5fb4;
+  padding: 1px 10px;
+  border-radius: 6px;
+  display: inline-block;
+  min-width: 32px;
+  text-align: center;
+}
+.vehicle-info-change {
+  margin-left: auto;
+  background: rgba(255,255,255,0.2);
+  border: 1px solid rgba(255,255,255,0.4);
+  color: white;
+  padding: 4px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-family: inherit;
+  cursor: pointer;
 }
 .progress-row {
   background: white;
   border-radius: 12px;
   padding: 16px 20px;
   color: #111;
-  display: flex;
-  align-items: center;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
   gap: 16px;
+  align-items: center;
 }
-.progress-text {
-  font-size: 20px;
-  font-weight: 700;
-  flex-shrink: 0;
-}
-.progress-text .done-num {
-  font-size: 32px;
+.progress-remain {
+  font-size: 36px;
+  font-weight: 900;
   color: #1a5fb4;
+  line-height: 1;
+  font-feature-settings: "tnum";
+}
+.progress-remain small {
+  font-size: 14px;
+  font-weight: 700;
+  color: #666;
+  margin-left: 2px;
 }
 .progress-bar {
-  flex: 1;
-  height: 14px;
+  height: 12px;
   background: #e5e5e5;
-  border-radius: 7px;
+  border-radius: 6px;
   overflow: hidden;
 }
 .progress-fill {
   height: 100%;
   background: #2e7d32;
-  border-radius: 7px;
+  border-radius: 6px;
   transition: width 0.4s ease;
+}
+.progress-detail {
+  font-size: 14px;
+  font-weight: 700;
+  color: #888;
+  font-feature-settings: "tnum";
+  white-space: nowrap;
 }
 
 /* ======== タブ ======== */
@@ -159,20 +213,20 @@ body {
 }
 
 .next-body {
-  padding: 20px;
+  padding: 22px 20px;
 }
 .next-name {
-  font-size: 26px;
+  font-size: 30px;
   font-weight: 800;
-  line-height: 1.3;
-  margin-bottom: 10px;
+  line-height: 1.25;
+  margin-bottom: 12px;
   color: #111;
 }
 .next-address {
-  font-size: 17px;
-  color: #444;
+  font-size: 18px;
+  color: #333;
   line-height: 1.5;
-  margin-bottom: 16px;
+  margin-bottom: 18px;
 }
 
 /* 納品場所 - 超目立つ */
@@ -200,7 +254,7 @@ body {
   flex-shrink: 0;
 }
 .delivery-where {
-  font-size: 22px;
+  font-size: 24px;
   font-weight: 800;
   color: #111;
   line-height: 1.3;
@@ -236,7 +290,7 @@ body {
   font-weight: 600;
 }
 .info-item-value {
-  font-size: 17px;
+  font-size: 19px;
   font-weight: 700;
   color: #111;
 }
@@ -249,11 +303,11 @@ body {
   margin-top: 8px;
 }
 .big-btn {
-  padding: 22px;
+  padding: 24px;
   border: none;
   border-radius: 14px;
   font-family: inherit;
-  font-size: 22px;
+  font-size: 24px;
   font-weight: 800;
   cursor: pointer;
   display: flex;
@@ -934,6 +988,22 @@ body {
   text-decoration: underline;
 }
 
+/* メモ折りたたみ */
+.memo-toggle {
+  background: none;
+  border: none;
+  color: #1a5fb4;
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 8px 0;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.memo-toggle:active { color: #0d47a1; }
+.memo-area { margin-top: 14px; }
+
 /* 配送完了モーダルの状態ボタン */
 .completion-status-grid {
   display: grid;
@@ -1205,30 +1275,23 @@ body {
 
 <!-- ヘッダー -->
 <div class="header">
-  <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;">
-    <a href="index.html" style="color:white;text-decoration:none;font-size:22px;background:rgba(255,255,255,0.2);width:36px;height:36px;border-radius:50%;display:grid;place-items:center;">←</a>
-    <div class="header-title" style="margin:0;">🚚 今日の配送</div>
-  </div>
-  <div class="header-date" id="dateText">2026年4月17日（金）</div>
-  <div class="vehicle-info" id="vehicleInfo" style="display:none;">
-    <div class="vehicle-info-badge">
-      <span class="vehicle-info-num" id="vehicleNum">1</span><span class="vehicle-info-label">号車</span>
+  <div class="header-top-row">
+    <a href="index.html" class="header-back">←</a>
+    <div class="header-info">
+      <div class="header-date" id="dateText">2026年4月17日（金）</div>
+      <div class="header-driver" id="headerDriver">
+        <span class="vehicle-info-num" id="vehicleNum">—</span>号車 <span id="vehicleDriver">—</span>
+        <button class="vehicle-info-change" onclick="openVehicleSelector()">変更</button>
+      </div>
     </div>
-    <div class="vehicle-info-driver" id="vehicleDriver">山田さん</div>
-    <button class="vehicle-info-change" onclick="openVehicleSelector()">変更</button>
   </div>
   <div class="progress-row">
-    <div class="progress-text"><span class="done-num" id="doneNum">3</span> / <span id="totalNum">12</span></div>
+    <div class="progress-remain"><span id="remainNum">—</span><small>件</small></div>
     <div class="progress-bar">
       <div class="progress-fill" id="progressFill"></div>
     </div>
+    <div class="progress-detail"><span id="doneNum">0</span>/<span id="totalNum">0</span></div>
   </div>
-</div>
-
-<!-- タブ -->
-<div class="tabs">
-  <button class="tab active" data-view="route">📋 今日の配送</button>
-  <button class="tab" data-view="master">🏪 店舗リスト</button>
 </div>
 
 <!-- ルート画面 -->
@@ -1241,125 +1304,6 @@ body {
     <div class="list-title">本日の配送先</div>
     <div class="list-hint">≡ を長押しで順番を変えられます</div>
     <div id="stopList"></div>
-  </div>
-</div>
-
-<!-- マスタ画面 -->
-<div class="master-view" id="masterView">
-  <div class="search-area">
-    <input type="text" class="search-box" id="searchInput" placeholder="店舗名で検索">
-  </div>
-  <div class="sync-bar" id="syncBar">
-    <div class="sync-dot" id="syncDot"></div>
-    <div class="sync-text" id="syncText">Google スプレッドシートと連動中</div>
-    <button class="sync-btn-small" id="syncBtn" onclick="syncNow()">更新</button>
-  </div>
-  <div class="filter-row">
-    <button class="filter-btn active" data-filter="all">すべて</button>
-    <button class="filter-btn" data-filter="名古屋">名古屋市</button>
-    <button class="filter-btn" data-filter="豊田">豊田市</button>
-    <button class="filter-btn" data-filter="岡崎">岡崎市</button>
-    <button class="filter-btn" data-filter="その他">その他</button>
-  </div>
-  <div class="shop-list-master">
-    <div class="shop-count" id="shopCount">10件</div>
-    <div id="shopListMaster"></div>
-  </div>
-</div>
-
-<!-- 追加ボタン -->
-<button class="fab" id="fab" onclick="openAddModal()">+</button>
-
-<!-- 下タブ -->
-<div class="bottom-nav">
-  <button class="nav-btn active" data-nav="route">
-    <span class="nav-icon-big">📋</span>
-    <span class="nav-label-big">今日の配送</span>
-  </button>
-  <button class="nav-btn" data-nav="master">
-    <span class="nav-icon-big">🏪</span>
-    <span class="nav-label-big">店舗リスト</span>
-  </button>
-</div>
-
-<!-- モーダル -->
-<div class="modal-bg" id="modal">
-  <div class="modal">
-    <div class="modal-head">
-      <div class="modal-title" id="modalTitle">配送先を追加</div>
-      <button class="modal-close" onclick="closeModal()">✕</button>
-    </div>
-
-    <div class="fs">
-      <div class="fs-heading">📝 お店の情報</div>
-      <div class="fg">
-        <label class="fg-label">お店の名前<span class="req">*</span></label>
-        <input type="text" class="fg-input" id="f_name" placeholder="例：居酒屋まるきん 栄店">
-      </div>
-      <div class="fg">
-        <label class="fg-label">住所<span class="req">*</span></label>
-        <input type="text" class="fg-input" id="f_address" placeholder="例：名古屋市中区栄3-15-8">
-      </div>
-      <div class="fg">
-        <label class="fg-label">電話番号</label>
-        <input type="tel" class="fg-input" id="f_tel" placeholder="052-XXX-XXXX">
-      </div>
-      <div class="fg">
-        <label class="fg-label">担当の方のお名前</label>
-        <input type="text" class="fg-input" id="f_contact" placeholder="例：田中店長">
-      </div>
-    </div>
-
-    <div class="fs">
-      <div class="fs-heading">📦 納品について</div>
-      <div class="fg">
-        <label class="fg-label">どこに置きますか？<span class="req">*</span></label>
-        <div class="place-grid" id="placeGrid">
-          <div class="place-opt" data-place="entrance"><span class="place-opt-icon">🚪</span><div class="place-opt-label">お店の入口</div></div>
-          <div class="place-opt" data-place="back"><span class="place-opt-icon">🚛</span><div class="place-opt-label">裏口・搬入口</div></div>
-          <div class="place-opt" data-place="staff"><span class="place-opt-icon">🙋</span><div class="place-opt-label">スタッフに手渡し</div></div>
-          <div class="place-opt" data-place="kitchen"><span class="place-opt-icon">👨‍🍳</span><div class="place-opt-label">キッチンまで運ぶ</div></div>
-          <div class="place-opt" data-place="storage"><span class="place-opt-icon">📦</span><div class="place-opt-label">倉庫に置く</div></div>
-          <div class="place-opt" data-place="counter"><span class="place-opt-icon">🧾</span><div class="place-opt-label">レジカウンター</div></div>
-        </div>
-      </div>
-      <div class="fg">
-        <label class="fg-label">気をつけることメモ</label>
-        <textarea class="fg-textarea" id="f_note" placeholder="例：裏のシャッターが開いてます／重いので台車で／インターホン鳴らしてから"></textarea>
-        <div class="fg-hint">配送のときに画面で見ることができます</div>
-      </div>
-    </div>
-
-    <div class="fs">
-      <div class="fs-heading">📅 配送する日</div>
-      <div class="fg">
-        <label class="fg-label">曜日（複数選べます）</label>
-        <div class="day-grid" id="dayGrid">
-          <button class="day-btn" data-day="1">月</button>
-          <button class="day-btn" data-day="2">火</button>
-          <button class="day-btn" data-day="3">水</button>
-          <button class="day-btn" data-day="4">木</button>
-          <button class="day-btn" data-day="5">金</button>
-          <button class="day-btn" data-day="6">土</button>
-          <button class="day-btn" data-day="0">日</button>
-        </div>
-      </div>
-      <div class="fg">
-        <label class="fg-label">希望の時間帯</label>
-        <input type="text" class="fg-input" id="f_time" placeholder="例：11:00〜13:00">
-      </div>
-      <div class="fg">
-        <label class="fg-label">いつもの商品</label>
-        <textarea class="fg-textarea" id="f_items" placeholder="例：お米20kg、醤油、割り箸"></textarea>
-      </div>
-    </div>
-
-    <button class="btn-delete" id="deleteBtn" onclick="deleteShop()" style="display:none">このお店を削除</button>
-
-    <div class="modal-foot">
-      <button class="btn-cancel" onclick="closeModal()">やめる</button>
-      <button class="btn-save" onclick="saveShop()">保存する</button>
-    </div>
   </div>
 </div>
 
@@ -1376,21 +1320,23 @@ body {
       <div id="completionShopAddr" style="font-size:14px;color:#666;"></div>
     </div>
     <div class="fs">
-      <div class="fs-heading" style="margin-bottom:12px;">📋 配送結果</div>
+      <div class="fs-heading" style="margin-bottom:12px;">配達できましたか？</div>
       <div class="completion-status-grid">
         <button class="completion-status-btn done" data-status="done" onclick="selectCompletionStatus('done')">
           <span class="cs-icon">✓</span>
-          <span class="cs-label">配達完了</span>
+          <span class="cs-label">できた</span>
         </button>
         <button class="completion-status-btn failed" data-status="failed" onclick="selectCompletionStatus('failed')">
-          <span class="cs-icon">⚠️</span>
-          <span class="cs-label">配達できず</span>
+          <span class="cs-icon">✕</span>
+          <span class="cs-label">できなかった</span>
         </button>
       </div>
     </div>
-    <div class="fs">
-      <div class="fs-heading" style="margin-bottom:8px;">📝 メモ <span style="font-size:13px;font-weight:500;color:#999;">（任意）</span></div>
-      <textarea class="fg-textarea" id="completionNote" placeholder="例：店主不在で裏口に置いた / 開店前で受け渡せず再配達依頼"></textarea>
+    <div class="fs" style="padding-top:12px;padding-bottom:12px;">
+      <button type="button" class="memo-toggle" id="memoToggle" onclick="toggleMemo()">📝 メモを書く（任意）</button>
+      <div class="memo-area" id="memoArea" style="display:none;">
+        <textarea class="fg-textarea" id="completionNote" placeholder="例：店主不在で裏口に置いた／インターホン応答なし"></textarea>
+      </div>
     </div>
     <div class="modal-foot">
       <button class="btn-cancel" onclick="closeCompletionModal()">やめる</button>
@@ -1433,12 +1379,6 @@ const PLACES = {
 let shops = [];
 let route = [];
 
-let currentView = "route";
-let currentFilter = "all";
-let currentSearch = "";
-let editingId = null;
-let selectedPlace = null;
-let selectedDays = [];
 let currentDate = todayStr();
 let currentVehicleId = null;
 let currentDriver = "";
@@ -1505,7 +1445,6 @@ async function fetchShops() {
     try { localStorage.setItem(SHOPS_CACHE_KEY, JSON.stringify({ shops, savedAt: Date.now() })); } catch (_) {}
     setSyncStatus("ok");
     renderRoute();
-    if (currentView === "master") renderMaster();
     return shops;
   } catch (e) {
     const cached = loadCachedShops();
@@ -1513,7 +1452,6 @@ async function fetchShops() {
       shops = cached.shops;
       setSyncStatus("error", `オフライン表示中（${formatCacheTime(cached.savedAt)}）`);
       renderRoute();
-      if (currentView === "master") renderMaster();
     } else {
       shops = [];
       setSyncStatus("error", "接続できません");
@@ -1579,8 +1517,10 @@ function setSyncStatus(state, message) {
 
 function renderHeader() {
   const processed = route.filter(r => r.status === 'done' || r.status === 'failed').length;
+  const remain = route.filter(r => r.status === 'pending').length;
   const total = route.length;
   const pct = total > 0 ? Math.round((processed / total) * 100) : 0;
+  document.getElementById("remainNum").textContent = remain;
   document.getElementById("doneNum").textContent = processed;
   document.getElementById("totalNum").textContent = total;
   document.getElementById("progressFill").style.width = pct + "%";
@@ -1621,7 +1561,7 @@ function renderNext() {
       <div class="all-done">
         <div class="all-done-icon">🎉</div>
         <div class="all-done-title">すべて回りました！</div>
-        <div class="all-done-msg">本日もお疲れさまでした${failed ? `<br><small style="color:#c62828;font-size:14px;">配達できず ${failed}件</small>` : ''}</div>
+        <div class="all-done-msg">本日もお疲れさまでした${failed ? `<br><small style="color:#c62828;font-size:14px;">配達できなかった ${failed}件</small>` : ''}</div>
       </div>`;
     if (label) label.style.display = 'none';
     return;
@@ -1707,75 +1647,6 @@ function renderRoute() {
   renderRouteList();
 }
 
-function renderMaster() {
-  const filtered = shops.filter(s => {
-    if (currentFilter === "all") return matchSearch(s);
-    if (currentFilter === "その他") return !["名古屋","豊田","岡崎"].some(a => s.address.includes(a)) && matchSearch(s);
-    return s.address.includes(currentFilter) && matchSearch(s);
-  });
-  document.getElementById("shopCount").textContent = `${filtered.length}件`;
-  const listEl = document.getElementById("shopListMaster");
-  if (filtered.length === 0) {
-    listEl.innerHTML = `<div style="text-align:center;padding:40px 20px;color:#666;font-size:18px;">該当するお店がありません</div>`;
-    return;
-  }
-  const dayLabels = ["日","月","火","水","木","金","土"];
-  listEl.innerHTML = filtered.map(s => {
-    const place = PLACES[s.place] || PLACES.entrance;
-    const daysText = s.days.length === 7 ? "毎日" : s.days.length === 0 ? "—" : s.days.slice().sort().map(d => dayLabels[d]).join("・");
-    return `
-      <div class="shop-card-master" onclick="openEditModal(${s.id})">
-        <div class="shop-marker">${place.icon}</div>
-        <div class="shop-info">
-          <div class="shop-name-master">${s.name}</div>
-          <div class="shop-addr-master">📍 ${s.address}</div>
-          <div class="shop-tags-master">
-            <span class="shop-tag-master">${place.short}</span>
-            <span class="shop-tag-master">${daysText}</span>
-          </div>
-        </div>
-        <div class="shop-arrow">›</div>
-      </div>`;
-  }).join("");
-}
-
-function matchSearch(s) {
-  if (!currentSearch) return true;
-  const q = currentSearch.toLowerCase();
-  return s.name.toLowerCase().includes(q) || s.address.toLowerCase().includes(q);
-}
-
-function switchView(v) {
-  currentView = v;
-  document.getElementById("routeView").style.display = v === "route" ? "block" : "none";
-  document.getElementById("masterView").style.display = v === "master" ? "block" : "none";
-  document.getElementById("fab").classList.toggle("show", v === "master");
-  document.querySelectorAll(".tab").forEach(t => t.classList.toggle("active", t.dataset.view === v));
-  document.querySelectorAll(".nav-btn").forEach(n => n.classList.toggle("active", n.dataset.nav === v));
-  if (v === "master") renderMaster();
-  else renderRoute();
-}
-
-document.querySelectorAll(".tab").forEach(t => {
-  t.addEventListener("click", () => switchView(t.dataset.view));
-});
-document.querySelectorAll(".nav-btn").forEach(n => {
-  n.addEventListener("click", () => switchView(n.dataset.nav));
-});
-
-document.getElementById("searchInput").addEventListener("input", e => {
-  currentSearch = e.target.value;
-  renderMaster();
-});
-document.querySelectorAll(".filter-btn").forEach(p => {
-  p.addEventListener("click", () => {
-    document.querySelectorAll(".filter-btn").forEach(x => x.classList.remove("active"));
-    p.classList.add("active");
-    currentFilter = p.dataset.filter;
-    renderMaster();
-  });
-});
-
 function nextActiveIndex() {
   return route.findIndex(r => r.status === 'pending');
 }
@@ -1821,10 +1692,33 @@ function openCompletionModal(routeId) {
   completionStatus = null;
   document.getElementById('completionShopName').textContent = d.name;
   document.getElementById('completionShopAddr').textContent = d.address || '（住所未登録）';
-  document.getElementById('completionNote').value = r.completionNote || '';
+  const note = r.completionNote || '';
+  document.getElementById('completionNote').value = note;
+  // メモがある場合は折りたたみを開いた状態にする
+  const memoArea = document.getElementById('memoArea');
+  const memoToggle = document.getElementById('memoToggle');
+  if (note) {
+    memoArea.style.display = 'block';
+    memoToggle.textContent = '📝 メモを閉じる';
+  } else {
+    memoArea.style.display = 'none';
+    memoToggle.textContent = '📝 メモを書く（任意）';
+  }
   document.querySelectorAll('.completion-status-btn').forEach(b => b.classList.remove('on'));
   document.getElementById('completionSave').disabled = true;
   document.getElementById('completionModal').classList.add('show');
+}
+function toggleMemo() {
+  const area = document.getElementById('memoArea');
+  const btn = document.getElementById('memoToggle');
+  if (area.style.display === 'none') {
+    area.style.display = 'block';
+    btn.textContent = '📝 メモを閉じる';
+    setTimeout(() => document.getElementById('completionNote').focus(), 50);
+  } else {
+    area.style.display = 'none';
+    btn.textContent = '📝 メモを書く（任意）';
+  }
 }
 function closeCompletionModal() {
   document.getElementById('completionModal').classList.remove('show');
@@ -1853,7 +1747,7 @@ async function submitCompletion() {
   saveRouteCache();
   closeCompletionModal();
   renderRoute();
-  showToast(status === 'done' ? "✓ 配送完了しました" : "⚠️ 配達できずを記録しました");
+  showToast(status === 'done' ? "✓ 配達できたを記録しました" : "✕ 配達できなかったを記録しました");
   try {
     const res = await apiPost({ action: 'route_status', id, status, completionNote: note });
     if (res.error) throw new Error(res.error);
@@ -1869,7 +1763,7 @@ async function toggleDone(i) {
   const r = route[i];
   if (r.status === 'pending') return;
   const d = getRouteDisplay(r);
-  if (!confirm(`「${d.name}」の${r.status === 'done' ? '完了' : '配達できず'}を\n取り消しますか？`)) return;
+  if (!confirm(`「${d.name}」の記録を\n取り消しますか？`)) return;
   const id = r.id;
   const prev = { status: r.status, completedAt: r.completedAt };
   r.status = 'pending';
@@ -1891,128 +1785,6 @@ function callShop() {
   if (idx === -1) return;
   const d = getRouteDisplay(route[idx]);
   if (d.tel) location.href = `tel:${d.tel.replace(/[^0-9+]/g, '')}`;
-}
-
-function openAddModal() {
-  editingId = null;
-  document.getElementById("modalTitle").textContent = "お店を追加";
-  document.getElementById("deleteBtn").style.display = "none";
-  clearForm();
-  document.getElementById("modal").classList.add("show");
-}
-function openEditModal(id) {
-  const s = getShop(id);
-  if (!s) return;
-  editingId = id;
-  document.getElementById("modalTitle").textContent = "お店の情報を編集";
-  document.getElementById("deleteBtn").style.display = "block";
-  document.getElementById("f_name").value = s.name;
-  document.getElementById("f_address").value = s.address;
-  document.getElementById("f_tel").value = s.tel || "";
-  document.getElementById("f_contact").value = s.contact || "";
-  document.getElementById("f_note").value = s.note || "";
-  document.getElementById("f_time").value = s.time || "";
-  document.getElementById("f_items").value = s.items || "";
-  selectedPlace = s.place;
-  selectedDays = [...(s.days || [])];
-  updateFormVisuals();
-  document.getElementById("modal").classList.add("show");
-}
-function clearForm() {
-  ["f_name","f_address","f_tel","f_contact","f_note","f_time","f_items"].forEach(id => {
-    document.getElementById(id).value = "";
-  });
-  selectedPlace = null;
-  selectedDays = [];
-  updateFormVisuals();
-}
-function updateFormVisuals() {
-  document.querySelectorAll(".place-opt").forEach(el => {
-    el.classList.toggle("on", el.dataset.place === selectedPlace);
-  });
-  document.querySelectorAll(".day-btn").forEach(el => {
-    el.classList.toggle("on", selectedDays.includes(parseInt(el.dataset.day)));
-  });
-}
-document.querySelectorAll(".place-opt").forEach(el => {
-  el.addEventListener("click", () => {
-    selectedPlace = el.dataset.place;
-    updateFormVisuals();
-  });
-});
-document.querySelectorAll(".day-btn").forEach(el => {
-  el.addEventListener("click", () => {
-    const d = parseInt(el.dataset.day);
-    if (selectedDays.includes(d)) selectedDays = selectedDays.filter(x => x !== d);
-    else selectedDays.push(d);
-    updateFormVisuals();
-  });
-});
-function closeModal() {
-  document.getElementById("modal").classList.remove("show");
-}
-async function saveShop() {
-  const name = document.getElementById("f_name").value.trim();
-  const address = document.getElementById("f_address").value.trim();
-  if (!name || !address) return alert("お店の名前と住所を入力してください");
-  if (!selectedPlace) return alert("納品する場所を選んでください");
-  const shop = {
-    name, address,
-    tel: document.getElementById("f_tel").value.trim(),
-    contact: document.getElementById("f_contact").value.trim(),
-    place: selectedPlace,
-    note: document.getElementById("f_note").value.trim(),
-    days: [...selectedDays],
-    time: document.getElementById("f_time").value.trim(),
-    items: document.getElementById("f_items").value.trim(),
-  };
-  if (editingId !== null) shop.id = editingId;
-
-  const saveBtn = document.querySelector(".btn-save");
-  const origLabel = saveBtn.textContent;
-  saveBtn.disabled = true;
-  saveBtn.textContent = "保存中…";
-  try {
-    const result = await apiPost({ action: "upsert", shop });
-    if (result.error) throw new Error(result.error);
-    closeModal();
-    showToast(editingId === null ? `「${name}」を追加しました ✓` : `「${name}」を更新しました ✓`);
-    await fetchShops();
-  } catch (e) {
-    alert("保存に失敗しました：" + e.message);
-  } finally {
-    saveBtn.disabled = false;
-    saveBtn.textContent = origLabel;
-  }
-}
-async function deleteShop() {
-  if (editingId === null) return;
-  const s = getShop(editingId);
-  if (!s) return;
-  if (!confirm(`「${s.name}」を削除しますか？\n元に戻せません。`)) return;
-
-  const delBtn = document.getElementById("deleteBtn");
-  const origLabel = delBtn.textContent;
-  delBtn.disabled = true;
-  delBtn.textContent = "削除中…";
-  try {
-    const result = await apiPost({ action: "delete", id: editingId });
-    if (result.error) throw new Error(result.error);
-    closeModal();
-    showToast(`削除しました`);
-    await fetchShops();
-  } catch (e) {
-    alert("削除に失敗しました：" + e.message);
-    delBtn.disabled = false;
-    delBtn.textContent = origLabel;
-  }
-}
-async function syncNow() {
-  try {
-    await fetchShops();
-    if (currentVehicleId) await fetchTodayRoute();
-    showToast("✓ 最新の情報に更新しました");
-  } catch (_) { /* fetchShops側でトースト出済み */ }
 }
 
 // ============================================================
@@ -2063,14 +1835,10 @@ function loadRouteCache() {
 // 車両選択
 // ============================================================
 function updateVehicleInfo() {
-  const info = document.getElementById('vehicleInfo');
-  if (!currentVehicleId) {
-    info.style.display = 'none';
-    return;
-  }
-  info.style.display = 'flex';
-  document.getElementById('vehicleNum').textContent = currentVehicleId;
-  document.getElementById('vehicleDriver').textContent = currentDriver || '（ドライバー未入力）';
+  const numEl = document.getElementById('vehicleNum');
+  const drvEl = document.getElementById('vehicleDriver');
+  if (numEl) numEl.textContent = currentVehicleId || '—';
+  if (drvEl) drvEl.textContent = currentDriver || '—';
 }
 
 async function openVehicleSelector() {
