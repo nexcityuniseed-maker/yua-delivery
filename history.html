@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+<title>配送履歴 - 日本ユーア東海</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic", sans-serif;
+  background: #f0f2f5;
+  color: #111;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.header {
+  background: #1a5fb4;
+  color: white;
+  padding: 18px 24px;
+}
+.header-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: 1300px;
+  margin: 0 auto;
+}
+.back-btn {
+  color: white;
+  text-decoration: none;
+  font-size: 22px;
+  background: rgba(255,255,255,0.2);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+}
+.header-title { font-size: 20px; font-weight: 800; }
+
+.container {
+  max-width: 1300px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.controls {
+  background: white;
+  border-radius: 14px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+}
+.ctrl-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #666;
+  margin-bottom: 6px;
+  display: block;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.ctrl-input, .ctrl-select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  font-size: 15px;
+  font-family: inherit;
+  background: white;
+}
+.ctrl-input:focus, .ctrl-select:focus {
+  outline: none;
+  border-color: #1a5fb4;
+}
+.preset-row {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  grid-column: 1 / -1;
+}
+.preset-btn {
+  background: #f5f5f5;
+  border: 1px solid transparent;
+  padding: 8px 14px;
+  border-radius: 20px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  color: #444;
+  transition: all 0.1s;
+}
+.preset-btn:hover { background: #e3f2fd; color: #0d47a1; }
+.preset-btn.active { background: #1a5fb4; color: white; }
+.action-row {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+.btn-primary, .btn-export {
+  padding: 10px 20px;
+  border-radius: 8px;
+  border: none;
+  font-family: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  font-size: 14px;
+}
+.btn-primary { background: #1a5fb4; color: white; }
+.btn-primary:disabled { background: #ccc; cursor: wait; }
+.btn-export {
+  background: white;
+  color: #1a5fb4;
+  border: 2px solid #1a5fb4;
+}
+.btn-export:hover { background: #e3f2fd; }
+
+.summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 14px;
+  margin-bottom: 20px;
+}
+.sum-card {
+  background: white;
+  border-radius: 12px;
+  padding: 18px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  text-align: center;
+}
+.sum-card-num {
+  font-size: 30px;
+  font-weight: 900;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+.sum-card.total .sum-card-num { color: #1a5fb4; }
+.sum-card.done .sum-card-num { color: #2e7d32; }
+.sum-card.failed .sum-card-num { color: #c62828; }
+.sum-card.pending .sum-card-num { color: #ef6c00; }
+.sum-card-label {
+  font-size: 12px;
+  color: #666;
+  font-weight: 700;
+}
+
+.list-section {
+  background: white;
+  border-radius: 14px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  overflow: hidden;
+}
+.list-row {
+  display: grid;
+  grid-template-columns: 110px 80px 100px 1fr 110px 90px 110px 1.2fr;
+  gap: 14px;
+  padding: 14px 18px;
+  border-bottom: 1px solid #eee;
+  align-items: center;
+  font-size: 13px;
+}
+.list-row.head {
+  background: #fafafa;
+  font-weight: 800;
+  color: #666;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  position: sticky;
+  top: 0;
+  z-index: 5;
+}
+.list-row.empty {
+  display: block;
+  text-align: center;
+  padding: 60px 20px;
+  color: #999;
+}
+.list-row.empty .empty-icon { font-size: 48px; margin-bottom: 10px; }
+.list-row.empty .empty-title { font-size: 17px; font-weight: 700; margin-bottom: 6px; color: #444; }
+.list-row.empty .empty-desc { font-size: 13px; }
+
+.cell-status {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 800;
+  text-align: center;
+}
+.cell-status.done { background: #e8f5e9; color: #1b5e20; }
+.cell-status.failed { background: #ffebee; color: #b71c1c; }
+.cell-status.pending { background: #fff8e1; color: #ef6c00; }
+.cell-shop {
+  font-weight: 700;
+  color: #111;
+}
+.cell-shop-addr {
+  font-size: 11px;
+  color: #999;
+  margin-top: 2px;
+}
+.cell-note {
+  color: #444;
+  font-size: 12px;
+}
+.cell-time {
+  font-feature-settings: "tnum";
+  color: #444;
+}
+
+@media (max-width: 900px) {
+  .list-row {
+    grid-template-columns: 1fr;
+    gap: 6px;
+    padding: 12px 16px;
+  }
+  .list-row.head { display: none; }
+  .list-row { border-bottom: 1px solid #eee; }
+  .cell-mobile-label {
+    font-size: 11px;
+    color: #999;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+}
+
+.toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: #2e7d32;
+  color: white;
+  padding: 14px 24px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 700;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s, transform 0.3s;
+  z-index: 300;
+}
+.toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+.toast.error { background: #c62828; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-row">
+    <a href="index.html" class="back-btn">←</a>
+    <div class="header-title">📊 配送履歴</div>
+  </div>
+</div>
+
+<div class="container">
+  <div class="controls">
+    <div class="preset-row">
+      <button class="preset-btn" data-preset="today">今日</button>
+      <button class="preset-btn active" data-preset="week">直近7日</button>
+      <button class="preset-btn" data-preset="month">直近30日</button>
+      <button class="preset-btn" data-preset="custom">期間指定</button>
+    </div>
+    <div>
+      <label class="ctrl-label">開始日</label>
+      <input type="date" class="ctrl-input" id="dateFrom">
+    </div>
+    <div>
+      <label class="ctrl-label">終了日</label>
+      <input type="date" class="ctrl-input" id="dateTo">
+    </div>
+    <div>
+      <label class="ctrl-label">ドライバー</label>
+      <select class="ctrl-select" id="driverFilter">
+        <option value="">すべて</option>
+      </select>
+    </div>
+    <div>
+      <label class="ctrl-label">ステータス</label>
+      <select class="ctrl-select" id="statusFilter">
+        <option value="">すべて</option>
+        <option value="done">配達完了</option>
+        <option value="failed">配達できず</option>
+        <option value="pending">未処理</option>
+      </select>
+    </div>
+    <div class="action-row">
+      <button class="btn-export" onclick="exportCsv()">📥 CSVエクスポート</button>
+      <button class="btn-primary" id="reloadBtn" onclick="reload()">🔄 更新</button>
+    </div>
+  </div>
+
+  <div class="summary" id="summary">
+    <div class="sum-card total"><div class="sum-card-num" id="sumTotal">—</div><div class="sum-card-label">対象件数</div></div>
+    <div class="sum-card done"><div class="sum-card-num" id="sumDone">—</div><div class="sum-card-label">配達完了</div></div>
+    <div class="sum-card failed"><div class="sum-card-num" id="sumFailed">—</div><div class="sum-card-label">配達できず</div></div>
+    <div class="sum-card pending"><div class="sum-card-num" id="sumPending">—</div><div class="sum-card-label">未処理</div></div>
+  </div>
+
+  <div class="list-section">
+    <div class="list-row head">
+      <div>状態</div>
+      <div>日付</div>
+      <div>ドライバー</div>
+      <div>店舗</div>
+      <div>予定時刻</div>
+      <div>商品</div>
+      <div>完了時刻</div>
+      <div>メモ</div>
+    </div>
+    <div id="rows"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbwuHYmihka05oGdxfs7gFNeeqTFvE49aO7WD8Wu0f0mVELr4yxUiPZgtnAE-hLtgWXW/exec";
+
+function todayStr(d) {
+  const dt = d || new Date();
+  return `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;
+}
+function shiftDays(s, n) {
+  const [y, m, d] = s.split('-').map(x => parseInt(x));
+  const dt = new Date(y, m - 1, d);
+  dt.setDate(dt.getDate() + n);
+  return todayStr(dt);
+}
+function formatJpDate(s) {
+  if (!s) return '';
+  const [y, m, d] = s.split('-').map(x => parseInt(x));
+  const dow = ['日','月','火','水','木','金','土'][new Date(y, m - 1, d).getDay()];
+  return `${m}/${d}(${dow})`;
+}
+function formatTime(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return '—';
+  return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+}
+function statusLabel(s) {
+  return s === 'done' ? '完了' : s === 'failed' ? '配達できず' : s === 'pending' ? '未処理' : (s || '—');
+}
+
+let allRoutes = [];
+
+async function reload() {
+  const btn = document.getElementById('reloadBtn');
+  btn.disabled = true;
+  const orig = btn.textContent;
+  btn.textContent = '読み込み中…';
+  try {
+    const dateFrom = document.getElementById('dateFrom').value;
+    const dateTo = document.getElementById('dateTo').value;
+    const params = {};
+    if (dateFrom) params.dateFrom = dateFrom;
+    if (dateTo) params.dateTo = dateTo;
+    const url = WEBHOOK_URL + '?action=route_get&data=' + encodeURIComponent(JSON.stringify(params)) + '&t=' + Date.now();
+    const res = await fetch(url, { cache: 'no-store' });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+    allRoutes = data.routes || [];
+    populateDrivers();
+    render();
+    showToast(`✓ ${allRoutes.length}件 取得しました`);
+  } catch (e) {
+    showToast('⚠️ 取得失敗：' + e.message, true);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = orig;
+  }
+}
+
+function populateDrivers() {
+  const select = document.getElementById('driverFilter');
+  const cur = select.value;
+  const drivers = [...new Set(allRoutes.map(r => r.driver).filter(d => d))].sort();
+  select.innerHTML = '<option value="">すべて</option>' + drivers.map(d => `<option value="${d}">${d}</option>`).join('');
+  if (drivers.includes(cur)) select.value = cur;
+}
+
+function applyFilters() {
+  const driver = document.getElementById('driverFilter').value;
+  const status = document.getElementById('statusFilter').value;
+  return allRoutes.filter(r => {
+    if (driver && r.driver !== driver) return false;
+    if (status && r.status !== status) return false;
+    return true;
+  });
+}
+
+function render() {
+  const rows = applyFilters();
+  // サマリー
+  const tot = rows.length;
+  const done = rows.filter(r => r.status === 'done').length;
+  const fail = rows.filter(r => r.status === 'failed').length;
+  const pend = rows.filter(r => r.status === 'pending').length;
+  document.getElementById('sumTotal').textContent = tot;
+  document.getElementById('sumDone').textContent = done;
+  document.getElementById('sumFailed').textContent = fail;
+  document.getElementById('sumPending').textContent = pend;
+
+  const el = document.getElementById('rows');
+  if (rows.length === 0) {
+    el.innerHTML = `
+      <div class="list-row empty">
+        <div class="empty-icon">📭</div>
+        <div class="empty-title">該当する履歴がありません</div>
+        <div class="empty-desc">期間や絞込条件を変えて試してください</div>
+      </div>`;
+    return;
+  }
+  el.innerHTML = rows.map(r => {
+    const isMobile = window.innerWidth <= 900;
+    if (isMobile) {
+      return `
+        <div class="list-row">
+          <div><span class="cell-status ${r.status || 'pending'}">${statusLabel(r.status)}</span> <span style="margin-left:8px;color:#999;font-size:12px;">${formatJpDate(r.date)}</span></div>
+          <div class="cell-shop">${r.name || '(店舗名未入力)'}</div>
+          ${r.address ? `<div class="cell-shop-addr">📍 ${r.address}</div>` : ''}
+          <div style="font-size:12px;color:#666;">${r.driver || '—'} ・ 予定 ${r.scheduledTime || '—'} ・ 完了 ${formatTime(r.completedAt)}</div>
+          <div style="font-size:13px;color:#444;">${r.items || '—'}${r.qty ? ' × ' + r.qty : ''}</div>
+          ${r.completionNote ? `<div class="cell-note" style="background:#fafafa;padding:8px;border-radius:6px;">📝 ${r.completionNote}</div>` : ''}
+        </div>`;
+    }
+    return `
+      <div class="list-row">
+        <div><span class="cell-status ${r.status || 'pending'}">${statusLabel(r.status)}</span></div>
+        <div class="cell-time">${formatJpDate(r.date)}</div>
+        <div>${r.driver || '—'}</div>
+        <div>
+          <div class="cell-shop">${r.name || '(店舗名未入力)'}</div>
+          ${r.address ? `<div class="cell-shop-addr">${r.address}</div>` : ''}
+        </div>
+        <div class="cell-time">${r.scheduledTime || '—'}</div>
+        <div>${r.items || '—'}${r.qty ? ' ' + r.qty : ''}</div>
+        <div class="cell-time">${formatTime(r.completedAt)}</div>
+        <div class="cell-note">${r.completionNote || ''}</div>
+      </div>`;
+  }).join('');
+}
+
+function exportCsv() {
+  const rows = applyFilters();
+  if (rows.length === 0) {
+    showToast('エクスポートする行がありません', true);
+    return;
+  }
+  const headers = ['日付', 'ドライバー', '車両', '順', '店舗名', '住所', '予定時刻', '商品', '数量', '事前メモ', '状態', '完了時刻', '完了メモ'];
+  const escape = s => {
+    if (s === null || s === undefined) return '';
+    s = String(s);
+    if (s.includes('"') || s.includes(',') || s.includes('\n')) return '"' + s.replace(/"/g, '""') + '"';
+    return s;
+  };
+  const csv = [headers.join(',')].concat(rows.map(r => [
+    r.date, r.driver, r.vehicleId, r.order, r.name, r.address, r.scheduledTime, r.items, r.qty, r.note, statusLabel(r.status), r.completedAt, r.completionNote
+  ].map(escape).join(','))).join('\n');
+  const blob = new Blob(["﻿" + csv], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `配送履歴_${todayStr()}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast(`✓ ${rows.length}件をダウンロードしました`);
+}
+
+function showToast(msg, isError) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.toggle('error', !!isError);
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// プリセット
+function applyPreset(p) {
+  const today = todayStr();
+  const fromEl = document.getElementById('dateFrom');
+  const toEl = document.getElementById('dateTo');
+  document.querySelectorAll('.preset-btn').forEach(b => b.classList.toggle('active', b.dataset.preset === p));
+  if (p === 'today') {
+    fromEl.value = today;
+    toEl.value = today;
+  } else if (p === 'week') {
+    fromEl.value = shiftDays(today, -6);
+    toEl.value = today;
+  } else if (p === 'month') {
+    fromEl.value = shiftDays(today, -29);
+    toEl.value = today;
+  }
+  if (p !== 'custom') reload();
+}
+
+document.querySelectorAll('.preset-btn').forEach(b => {
+  b.addEventListener('click', () => applyPreset(b.dataset.preset));
+});
+['dateFrom', 'dateTo'].forEach(id => {
+  document.getElementById(id).addEventListener('change', () => {
+    document.querySelectorAll('.preset-btn').forEach(b => b.classList.toggle('active', b.dataset.preset === 'custom'));
+  });
+});
+['driverFilter', 'statusFilter'].forEach(id => {
+  document.getElementById(id).addEventListener('change', render);
+});
+window.addEventListener('resize', () => render());
+
+// 初期化
+applyPreset('week');
+</script>
+
+</body>
+</html>

@@ -9,7 +9,7 @@ const SHEET_NAME = 'shops';
 const HEADERS = ['id', 'name', 'address', 'tel', 'contact', 'place', 'note', 'days', 'time', 'items', 'updatedAt'];
 
 const ROUTE_SHEET = 'route';
-const ROUTE_HEADERS = ['id', 'date', 'vehicleId', 'driver', 'order', 'shopId', 'name', 'address', 'scheduledTime', 'items', 'qty', 'note', 'status', 'completedAt', 'importedAt', 'updatedAt'];
+const ROUTE_HEADERS = ['id', 'date', 'vehicleId', 'driver', 'order', 'shopId', 'name', 'address', 'scheduledTime', 'items', 'qty', 'note', 'status', 'completedAt', 'importedAt', 'updatedAt', 'completionNote'];
 
 const SEED_DATA = [
   [1,  '焼肉大将軍 名駅店',   '名古屋市中村区名駅4-5-2',           '052-111-1111', '山田店長',     'back',     '裏のシャッター開いてます',                     '1,2,3,4,5',   '10:00〜11:00', '割り箸、おしぼり',     ''],
@@ -78,7 +78,7 @@ function setupRoute() {
   sheet.getRange(1, 1, 1, ROUTE_HEADERS.length)
        .setFontWeight('bold').setBackground('#fce8b2').setHorizontalAlignment('center');
   sheet.setFrozenRows(1);
-  const widths = [50, 100, 70, 90, 60, 70, 180, 220, 100, 180, 80, 180, 80, 150, 150, 150];
+  const widths = [50, 100, 70, 90, 60, 70, 180, 220, 100, 180, 80, 180, 80, 150, 150, 150, 200];
   widths.forEach((w, i) => sheet.setColumnWidth(i + 1, w));
   SpreadsheetApp.getUi().alert('✅ route シートを準備しました');
 }
@@ -284,8 +284,12 @@ function routeGet(data) {
     const vid = parseInt(data.vehicleId);
     rows = rows.filter(r => parseInt(r.vehicleId) === vid);
   }
-  // 並び順: vehicleId → order
-  rows.sort((a, b) => (a.vehicleId - b.vehicleId) || (a.order - b.order));
+  if (data && data.dateFrom) rows = rows.filter(r => r.date >= data.dateFrom);
+  if (data && data.dateTo) rows = rows.filter(r => r.date <= data.dateTo);
+  if (data && data.status) rows = rows.filter(r => r.status === data.status);
+  if (data && data.driver) rows = rows.filter(r => r.driver === data.driver);
+  // 並び順: date → vehicleId → order
+  rows.sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0) || (a.vehicleId - b.vehicleId) || (a.order - b.order));
   return jsonCors({routes: rows, count: rows.length});
 }
 
@@ -390,8 +394,12 @@ function routeStatus(data) {
       const status = data.status || 'pending';
       const now = new Date().toISOString();
       sheet.getRange(i + 1, statusCol + 1).setValue(status);
-      sheet.getRange(i + 1, completedAtCol + 1).setValue(status === 'done' ? (data.completedAt || now) : '');
+      sheet.getRange(i + 1, completedAtCol + 1).setValue((status === 'done' || status === 'failed') ? (data.completedAt || now) : '');
       sheet.getRange(i + 1, updatedAtCol + 1).setValue(now);
+      if (data.completionNote !== undefined) {
+        const cnCol = headers.indexOf('completionNote');
+        if (cnCol >= 0) sheet.getRange(i + 1, cnCol + 1).setValue(data.completionNote || '');
+      }
       return jsonCors({ok: true, id: data.id, status: status});
     }
   }

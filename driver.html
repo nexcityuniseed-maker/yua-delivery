@@ -318,6 +318,23 @@ body {
   text-decoration: line-through;
   color: #666;
 }
+.list-card.failed {
+  background: #ffebee;
+  opacity: 0.85;
+}
+.list-card.failed .list-name {
+  color: #c62828;
+}
+.list-card.failed .list-num {
+  background: #c62828;
+  color: white;
+}
+.list-card.failed .list-num::after {
+  content: '⚠';
+  font-size: 28px;
+}
+.list-card.failed .list-num .num-text { display: none; }
+.list-card.failed .list-handle { visibility: hidden; }
 .list-card.dragging {
   opacity: 0.9;
   box-shadow: 0 8px 24px rgba(0,0,0,0.2);
@@ -909,6 +926,43 @@ body {
   text-decoration: underline;
 }
 
+/* 配送完了モーダルの状態ボタン */
+.completion-status-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.completion-status-btn {
+  border: 2px solid #ddd;
+  background: white;
+  border-radius: 14px;
+  padding: 20px 12px;
+  cursor: pointer;
+  font-family: inherit;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  transition: border-color 0.15s, background 0.15s, transform 0.1s;
+}
+.completion-status-btn:active { transform: scale(0.97); }
+.completion-status-btn .cs-icon { font-size: 36px; line-height: 1; }
+.completion-status-btn .cs-label { font-size: 17px; font-weight: 800; color: #111; }
+.completion-status-btn.done.on {
+  border-color: #2e7d32;
+  background: #e8f5e9;
+}
+.completion-status-btn.failed.on {
+  border-color: #c62828;
+  background: #ffebee;
+}
+.completion-status-btn.done.on .cs-label { color: #1b5e20; }
+.completion-status-btn.failed.on .cs-label { color: #b71c1c; }
+.btn-save:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
 /* 同期バー */
 .sync-bar {
   background: #e8f5e9;
@@ -1301,6 +1355,42 @@ body {
   </div>
 </div>
 
+<!-- 配送完了モーダル -->
+<div class="modal-bg" id="completionModal" style="z-index:240;">
+  <div class="modal" style="max-width: 540px;">
+    <div class="modal-head">
+      <div class="modal-title" id="completionTitle">配送完了</div>
+      <button class="modal-close" onclick="closeCompletionModal()">✕</button>
+    </div>
+    <div class="fs">
+      <div class="fs-heading" style="margin-bottom:8px;">店舗</div>
+      <div id="completionShopName" style="font-size:20px;font-weight:800;margin-bottom:6px;"></div>
+      <div id="completionShopAddr" style="font-size:14px;color:#666;"></div>
+    </div>
+    <div class="fs">
+      <div class="fs-heading" style="margin-bottom:12px;">📋 配送結果</div>
+      <div class="completion-status-grid">
+        <button class="completion-status-btn done" data-status="done" onclick="selectCompletionStatus('done')">
+          <span class="cs-icon">✓</span>
+          <span class="cs-label">配達完了</span>
+        </button>
+        <button class="completion-status-btn failed" data-status="failed" onclick="selectCompletionStatus('failed')">
+          <span class="cs-icon">⚠️</span>
+          <span class="cs-label">配達できず</span>
+        </button>
+      </div>
+    </div>
+    <div class="fs">
+      <div class="fs-heading" style="margin-bottom:8px;">📝 メモ <span style="font-size:13px;font-weight:500;color:#999;">（任意）</span></div>
+      <textarea class="fg-textarea" id="completionNote" placeholder="例：店主不在で裏口に置いた / 開店前で受け渡せず再配達依頼"></textarea>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-cancel" onclick="closeCompletionModal()">やめる</button>
+      <button class="btn-save" id="completionSave" onclick="submitCompletion()" disabled>保存する</button>
+    </div>
+  </div>
+</div>
+
 <!-- 車両選択モーダル -->
 <div class="modal-bg" id="vehicleSelectorModal" style="z-index:250;">
   <div class="modal" style="max-height:80vh;">
@@ -1480,10 +1570,10 @@ function setSyncStatus(state, message) {
 }
 
 function renderHeader() {
-  const done = route.filter(r => r.status === 'done').length;
+  const processed = route.filter(r => r.status === 'done' || r.status === 'failed').length;
   const total = route.length;
-  const pct = total > 0 ? Math.round((done / total) * 100) : 0;
-  document.getElementById("doneNum").textContent = done;
+  const pct = total > 0 ? Math.round((processed / total) * 100) : 0;
+  document.getElementById("doneNum").textContent = processed;
   document.getElementById("totalNum").textContent = total;
   document.getElementById("progressFill").style.width = pct + "%";
   const dateText = document.getElementById("dateText");
@@ -1515,14 +1605,15 @@ function renderNext() {
     if (label) label.style.display = 'none';
     return;
   }
-  // 未完了の最初の項目
-  const idx = route.findIndex(r => r.status !== 'done');
+  // 未処理（pending）の最初の項目
+  const idx = route.findIndex(r => r.status === 'pending');
   if (idx === -1) {
+    const failed = route.filter(r => r.status === 'failed').length;
     c.innerHTML = `
       <div class="all-done">
         <div class="all-done-icon">🎉</div>
-        <div class="all-done-title">すべて完了しました！</div>
-        <div class="all-done-msg">本日もお疲れさまでした</div>
+        <div class="all-done-title">すべて回りました！</div>
+        <div class="all-done-msg">本日もお疲れさまでした${failed ? `<br><small style="color:#c62828;font-size:14px;">配達できず ${failed}件</small>` : ''}</div>
       </div>`;
     if (label) label.style.display = 'none';
     return;
@@ -1562,7 +1653,7 @@ function renderNext() {
 
         <div class="btn-row">
           <button class="big-btn btn-nav" onclick="openNav()">
-            <span class="btn-icon">🗺️</span>地図で道案内（残り${route.filter(r => r.status !== 'done').length}件）
+            <span class="btn-icon">🗺️</span>地図で道案内（残り${route.filter(r => r.status === 'pending').length}件）
           </button>
           <button class="big-btn btn-done" onclick="markDone(${r.id})">
             <span class="btn-icon">✓</span>配送が終わりました
@@ -1582,8 +1673,11 @@ function renderRouteList() {
   listEl.innerHTML = route.map((r, i) => {
     const d = getRouteDisplay(r);
     const place = PLACES[d.place] || PLACES.entrance;
+    const stateClass = r.status === 'done' ? 'done' : r.status === 'failed' ? 'failed' : '';
+    const draggable = r.status === 'pending';
+    const note = r.completionNote ? `<div style="margin-top:6px;font-size:13px;color:${r.status === 'failed' ? '#b71c1c' : '#1b5e20'};">📝 ${r.completionNote}</div>` : '';
     return `
-      <div class="list-card ${d.done ? 'done' : ''}" data-index="${i}" draggable="${!d.done}">
+      <div class="list-card ${stateClass}" data-index="${i}" draggable="${draggable}">
         <div class="list-handle" data-drag="true">≡</div>
         <div class="list-num"><span class="num-text">${i+1}</span></div>
         <div class="list-body" onclick="toggleDone(${i})">
@@ -1592,6 +1686,7 @@ function renderRouteList() {
             <span class="list-place">${place.icon} ${place.short}</span>
             ${d.time ? `<span class="list-time">⏰ ${d.time}</span>` : ''}
           </div>
+          ${note}
         </div>
       </div>`;
   }).join("");
@@ -1674,11 +1769,11 @@ document.querySelectorAll(".filter-btn").forEach(p => {
 });
 
 function nextActiveIndex() {
-  return route.findIndex(r => r.status !== 'done');
+  return route.findIndex(r => r.status === 'pending');
 }
 // 残り全店舗を waypoints に渡してGoogle Mapsで道案内
 function openNav() {
-  const remaining = route.filter(r => r.status !== 'done');
+  const remaining = route.filter(r => r.status === 'pending');
   if (remaining.length === 0) return;
   const origin = encodeURIComponent(HOMEBASE_ADDRESS);
   // 残り店舗の住所を取得（route項目→店舗マスタの順で）
@@ -1703,40 +1798,82 @@ function openNav() {
   }
   window.open(url, '_blank');
 }
-async function markDone(routeId) {
-  const idx = route.findIndex(r => r.id === routeId);
+// 完了モーダル
+let completionRouteId = null;
+let completionStatus = null;
+function markDone(routeId) {
+  // 「配送が終わりました」ボタンから呼ばれる → モーダルを開く
+  openCompletionModal(routeId);
+}
+function openCompletionModal(routeId) {
+  const r = route.find(x => x.id === routeId);
+  if (!r) return;
+  const d = getRouteDisplay(r);
+  completionRouteId = routeId;
+  completionStatus = null;
+  document.getElementById('completionShopName').textContent = d.name;
+  document.getElementById('completionShopAddr').textContent = d.address || '（住所未登録）';
+  document.getElementById('completionNote').value = r.completionNote || '';
+  document.querySelectorAll('.completion-status-btn').forEach(b => b.classList.remove('on'));
+  document.getElementById('completionSave').disabled = true;
+  document.getElementById('completionModal').classList.add('show');
+}
+function closeCompletionModal() {
+  document.getElementById('completionModal').classList.remove('show');
+  completionRouteId = null;
+  completionStatus = null;
+}
+function selectCompletionStatus(status) {
+  completionStatus = status;
+  document.querySelectorAll('.completion-status-btn').forEach(b => {
+    b.classList.toggle('on', b.dataset.status === status);
+  });
+  document.getElementById('completionSave').disabled = false;
+}
+async function submitCompletion() {
+  if (!completionRouteId || !completionStatus) return;
+  const idx = route.findIndex(r => r.id === completionRouteId);
   if (idx === -1) return;
-  const d = getRouteDisplay(route[idx]);
-  if (!confirm(`「${d.name}」の配送が\n完了しましたか？`)) return;
-  // 楽観更新：先に画面を更新
-  route[idx].status = 'done';
+  const note = document.getElementById('completionNote').value.trim();
+  const id = completionRouteId;
+  const status = completionStatus;
+  // 楽観更新
+  const prev = { status: route[idx].status, completedAt: route[idx].completedAt, completionNote: route[idx].completionNote };
+  route[idx].status = status;
   route[idx].completedAt = new Date().toISOString();
+  route[idx].completionNote = note;
+  saveRouteCache();
+  closeCompletionModal();
   renderRoute();
-  showToast("✓ 配送完了しました");
+  showToast(status === 'done' ? "✓ 配送完了しました" : "⚠️ 配達できずを記録しました");
   try {
-    const res = await apiPost({ action: 'route_status', id: routeId, status: 'done' });
+    const res = await apiPost({ action: 'route_status', id, status, completionNote: note });
     if (res.error) throw new Error(res.error);
   } catch (e) {
-    // ロールバック
-    route[idx].status = 'pending';
-    route[idx].completedAt = '';
+    Object.assign(route[idx], prev);
+    saveRouteCache();
     renderRoute();
-    showToast("⚠️ 完了の保存失敗：" + e.message);
+    showToast("⚠️ 保存失敗：" + e.message);
   }
 }
 async function toggleDone(i) {
-  if (route[i].status !== 'done') return;
-  const d = getRouteDisplay(route[i]);
-  if (!confirm(`「${d.name}」の完了を\n取り消しますか？`)) return;
-  const id = route[i].id;
-  route[i].status = 'pending';
-  route[i].completedAt = '';
+  // リスト上のカードをタップ → 完了/失敗を取り消す
+  const r = route[i];
+  if (r.status === 'pending') return;
+  const d = getRouteDisplay(r);
+  if (!confirm(`「${d.name}」の${r.status === 'done' ? '完了' : '配達できず'}を\n取り消しますか？`)) return;
+  const id = r.id;
+  const prev = { status: r.status, completedAt: r.completedAt };
+  r.status = 'pending';
+  r.completedAt = '';
+  saveRouteCache();
   renderRoute();
   try {
     const res = await apiPost({ action: 'route_status', id, status: 'pending' });
     if (res.error) throw new Error(res.error);
   } catch (e) {
-    route[i].status = 'done';
+    Object.assign(route[i], prev);
+    saveRouteCache();
     renderRoute();
     showToast("⚠️ 取消失敗：" + e.message);
   }
