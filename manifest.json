@@ -1,0 +1,55 @@
+{
+  "name": "YUA Delivery — 日本ユーア東海 配送アプリ",
+  "short_name": "YUA配送",
+  "description": "株式会社 日本ユーア東海の配送業務を効率化する配送管理アプリ",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#1a5fb4",
+  "theme_color": "#1a5fb4",
+  "lang": "ja",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "今日の配送",
+      "short_name": "配送",
+      "description": "ドライバー画面",
+      "url": "./driver.html",
+      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "ルート作成",
+      "short_name": "ルート",
+      "description": "車両振り分け",
+      "url": "./route.html",
+      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "配送履歴",
+      "short_name": "履歴",
+      "description": "履歴ビューア",
+      "url": "./history.html",
+      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}
